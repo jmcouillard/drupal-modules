@@ -1,0 +1,4 @@
+name = Video field formatter
+description = "Provides a field formatter for text field. Give me an url, I will give you an embed player."
+core = 7.x
+package = jmcouillard

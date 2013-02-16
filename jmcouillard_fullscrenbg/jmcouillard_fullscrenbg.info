@@ -1,0 +1,5 @@
+name = Fullscren Background
+description = "jQuery fullscreen background."
+core = 7.x
+package = jmcouillard
+configure = admin/config/media/fullscrenbg

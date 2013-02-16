@@ -1,0 +1,5 @@
+name = Image slider
+description = Render image fields in a jQuery slider.
+package = jmcouillard
+core = 7.x
+php = 5.2

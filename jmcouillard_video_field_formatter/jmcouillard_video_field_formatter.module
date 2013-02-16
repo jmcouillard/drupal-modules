@@ -1,0 +1,124 @@
+<?php
+
+
+/**
+ * Implementation of hook_field_formatter_info(). It routes pages to functions.
+ */
+function jmcouillard_video_field_formatter_field_formatter_info() {
+
+  $items = array();
+  
+  $items['jmcouillard_video_field_formatter'] = array(
+    'label' => 'Video player',
+    'description' => 'Give me an url, I will give you an embed player.',
+    'field types' => array('text'),
+    'settings' => array(
+  		'jmcouillard_video_field_formatter_width' => '640',
+  		'jmcouillard_video_field_formatter_height' => '480',
+    	),
+  );
+  
+    
+  return $items;
+}
+
+
+/**
+ * Implementation of hook_field_formatter_view()
+ */
+function jmcouillard_video_field_formatter_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+   
+  $element = array();
+  $settings = $display['settings'];
+
+  switch ($display['type']) {
+    case 'jmcouillard_video_field_formatter':
+    
+      $width = $settings['jmcouillard_video_field_formatter_width'];
+      $width = is_numeric($width) ? $width . "px" : $width;
+      
+      $height = $settings['jmcouillard_video_field_formatter_height'];
+      $height = is_numeric($height) ? $height . "px" : $height;
+    
+      foreach ($items as $delta => $item) {
+
+        if(strstr($item['value'], "vimeo")) {
+          $id = str_replace('http://', '', $item['value']);
+          $id = str_replace('https://', '', $id);
+          $id = str_replace('www.', '', $id);
+          $id = str_replace('vimeo.com/', '', $id);
+          $element[$delta] = array('#markup' => '<iframe src="http://player.vimeo.com/video/' . $id . '/?api=1&amp;portrait=0" width="410" height="230" frameborder="0" webkitallowfullscreen="" allowfullscreen="" style="width: ' . $width . '; height: ' . $height . '; "></iframe>');
+        
+        } else if(strstr($item['value'], "youtube")) {
+          $id = str_replace('http://', '', $item['value']);
+          $id = str_replace('https://', '', $id);
+          $id = str_replace('www.', '', $id);
+          $id = str_replace('youtube.com/watch?v=', '', $id);
+          $element[$delta] = array('#markup' => '<iframe src="http://www.youtube.com/embed/' . $id . '" width="410" height="230" frameborder="0" webkitallowfullscreen="" allowfullscreen="" style="width: ' . $width . '; height: ' . $height . '; "></iframe>');
+
+        } else {
+
+          $element[$delta] = array('#markup' => 'Not found');
+        }
+        
+      }
+      break;
+  }
+
+  return $element;
+}
+
+
+/**
+ * Implements hook_field_formatter_Settings_form().
+ */
+function jmcouillard_video_field_formatter_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $form = array();
+  
+  if ($display['type'] == 'jmcouillard_video_field_formatter') {
+    
+    $form['jmcouillard_video_field_formatter_width'] = array(
+      '#title' => t("Width (px)"),
+      '#type' => 'textfield',
+      '#default_value' => $settings['jmcouillard_video_field_formatter_width'],
+      '#required' => TRUE,
+    );
+
+    $form['jmcouillard_video_field_formatter_height'] = array(
+      '#title' => t("Height (px)"),
+      '#type' => 'textfield',
+      '#default_value' => $settings['jmcouillard_video_field_formatter_height'],
+      '#required' => TRUE,
+    );
+  }
+
+  $context = array(
+    'field' => $field,
+    'instance' => $instance,
+    'view_mode' => $view_mode
+  );
+  
+  drupal_alter('jmcouillard_video_field_formatter_field_formatter_settings_form', $form, $form_state, $context);
+
+  return $form;
+}
+
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function jmcouillard_video_field_formatter_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = array();
+
+  if ($display['type'] == 'jmcouillard_video_field_formatter') {
+    $summary[] = t("Size is ") . $settings['jmcouillard_video_field_formatter_width'] . " x " . $settings['jmcouillard_video_field_formatter_height'] . ".";
+    $summary = theme('item_list', array('type' => 'ul', 'items' => $summary));
+  }
+
+  return $summary;
+}

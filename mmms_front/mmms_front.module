@@ -1,0 +1,43 @@
+<?php
+
+/**
+ * Implementation of hook_menu(). It routes pages to functions.
+ */
+function mmms_front_menu() {
+
+  $items = array();
+  
+  $items['front'] = array(
+    'title' => 'Accueil',
+    'description' => 'Here you can enter the password to access the private gallery',
+    'page callback' => 'mmms_front_page',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+
+/**
+ * Implementation of hook_nodeapi().
+ * @link http://api.drupal.org/api/function/hook_nodeapi/6
+ */
+function mmms_front_page() {
+
+  $accueilNode = node_load(1);
+  $accueilRender = drupal_render(node_view($accueilNode));
+
+  $ateliersRender = views_embed_view('all_ateliers');
+
+  $wecfNode = node_load(2);
+  $wecfRender = drupal_render(node_view($wecfNode));
+  
+  $equipeRender = views_embed_view('equipe');
+
+  $partenairesRender = views_embed_view('partenaires');
+
+  $separator = '<div class="separator"><div class="up"></div></div>';
+  
+	return $accueilRender . $separator . $ateliersRender . $separator . $wecfRender  . $equipeRender . $separator . $partenairesRender;
+}

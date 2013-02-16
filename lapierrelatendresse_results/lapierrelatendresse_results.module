@@ -1,0 +1,111 @@
+<?php
+
+/**
+ * Implementation of hook_menu(). It routes pages to functions.
+ */
+function lapierrelatendresse_results_menu() {
+
+  $items = array();
+  
+  $items['results'] = array(
+    'title' => 'Results',
+    'page callback' => 'lapierrelatendresse_results_page',
+    'page arguments' => array(FALSE),
+    'access callback' => 'user_access',
+    'access arguments' => array('lapierrelatendresse results'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['results/csv'] = array(
+    'title' => 'Results CSV',
+    'page callback' => 'lapierrelatendresse_results_page',
+    'page arguments' => array(TRUE),
+    'access callback' => 'user_access',
+    'access arguments' => array('lapierrelatendresse results'),
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+/**
+ * Implementation of hook_permission().
+ */
+function lapierrelatendresse_results_permission() {
+  return array('lapierrelatendresse results' => array(
+      'title' => t('View custom results'),
+      'description' => t('Access results page.'),
+    ), );
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function lapierrelatendresse_results_page($csv = FALSE) {
+
+  // Gatter data from database
+  $data = array();
+  $results = db_query("SELECT * FROM {webform_submitted_data} AS d LEFT JOIN {webform_component} AS c ON c.cid = d.cid ORDER BY d.sid");
+  while ($row = $results -> fetch()) {
+    $data[$row -> sid][$row -> name] = $row -> data;
+  }
+
+  // Define table variables
+  $rows = array();
+  $output = '';
+  $attributes = array('id' => array('lapierrelatendresse_results_page_table'));
+
+  // Create rows
+  foreach ($data as $key => $item) {
+    $rows[$key] = array();
+
+    foreach ($item as $cellname => $celldata) {
+      $rows[$key][$cellname] = $celldata;
+    }
+  }
+
+  // Create table header <th> 
+  foreach (array_shift(array_values($rows)) as $key => $value) {
+    $header[] = $key;
+  }
+
+  // Render table
+  $output .= theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'tree' => TRUE,
+    'attributes' => $attributes
+  ));
+
+  if($csv == TRUE) {
+    _lapierrelatendresse_results_to_csv($header, $rows);
+  }
+
+  $output .= '<a href="results/csv">Download CSV</a>';  
+
+  // Render and return
+  return $output;
+  
+}
+
+
+function _lapierrelatendresse_results_to_csv($header, $rows) {
+
+  $time = time(); 
+
+  header("Content-type: application/csv");
+  header("Content-Disposition: attachment; filename=\"lapierrelatendresse_form_results_".date('Y.m.d', $time).".csv\"");
+  header("Pragma: no-cache");
+  header("Expires: 0");
+
+  $handle = fopen('php://output', 'w');
+  fputcsv($handle, $header);
+
+  foreach ($rows as $row) {
+    fputcsv($handle, array_values($row));
+  }
+
+  fclose($handle);
+  exit;
+}
+

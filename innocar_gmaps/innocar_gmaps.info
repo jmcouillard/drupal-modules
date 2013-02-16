@@ -1,0 +1,5 @@
+name = Innocar gmaps
+description = Render a google map with the api.
+package = jmcouillard
+core = 7.x
+php = 5.2

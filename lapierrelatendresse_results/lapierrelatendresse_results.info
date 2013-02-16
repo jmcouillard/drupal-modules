@@ -1,0 +1,4 @@
+name = Lapierre Latendresse results
+description = "Render results page."
+core = 7.x
+package = jmcouillard

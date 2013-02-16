@@ -1,0 +1,162 @@
+<?php
+
+/**
+ * Implementation of hook_menu(). It routes pages to functions.
+ */
+function jmcouillard_fullscrenbg_menu() {
+
+	$items = array();
+
+	$items['admin/config/media/fullscrenbg'] = array(
+		'title' => 'Fullscreen background',
+		'description' => 'Configuration for Fullscreen Background module',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('jmcouillard_fullscrenbg_config_form'),
+		'access arguments' => array('access administration pages'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+
+	return $items;
+}
+
+/**
+ * Implementation of hook_block_info().
+ */
+function jmcouillard_fullscrenbg_block_info() {
+
+	$blocks['jmcouillard_fullscrenbg_link'] = array(
+		'info' => t('Fullscreen Background script'),
+		'cache' => DRUPAL_NO_CACHE,
+	);
+
+	return $blocks;
+}
+
+/**
+ * Implementation of hook_block_view().
+ */
+function jmcouillard_fullscrenbg_block_view($delta = '') {
+
+	global $types;
+	$block = array();
+
+	switch ($delta) {
+		case 'jmcouillard_fullscrenbg_link' :
+
+			// Generate manager link module
+			$modulePath = drupal_get_path('module', 'jmcouillard_fullscrenbg');
+			$type = variable_get('jmcouillard_fullscrenbg_type', '');
+			$field = variable_get('jmcouillard_fullscrenbg_field', 'field_image');
+			$delay = intval(variable_get('jmcouillard_fullscrenbg_delay', '10')) * 1000;
+			$animtype = variable_get('jmcouillard_fullscrenbg_anim', "static");
+			
+			$nodes = entity_load('node', FALSE, array(
+				'type' => $type,
+				'status' => 1
+			));
+
+			// Get images
+			$images = array();
+			foreach ($nodes as $nid => $node) {
+				foreach ($node -> {$field}['und'] as $id => $image) {
+					$images[] = $image;
+				}
+			}
+
+			// Parse images
+			$output = array();
+			foreach ($images as $key => $image) {
+				$output[] = array(
+					"url" => file_create_url($image["uri"]),
+					"width" => $image["width"],
+					"height" => $image["height"]
+				);
+			}
+
+			// Add CSS and JS
+			drupal_add_css($modulePath . "/jmcouillard_fullscrenbg.css");
+			drupal_add_js($modulePath . "/fullscreenr.js");
+			drupal_add_js($modulePath . "/jquery.preload-1.0.8-min.js");
+			drupal_add_js($modulePath . "/jmcouillard_fullscrenbg.js");
+
+			// Output block
+			$block['subject'] = t('<none>');
+			$block['content'] = array(
+				'#type' => 'markup',
+				'#markup' => '<img id="fullscreen"/><script>jQuery.fn.fullscreenBackground(' . json_encode($output) . ', "'. $animtype.'", "' . $delay . '");</script>',
+			);
+			break;
+	}
+	return $block;
+}
+
+/**
+ * Form function, called by drupal_get_form()
+ * in the admin page.
+ */
+function jmcouillard_fullscrenbg_config_form($form, &$form_state) {
+
+	// Get formatted content types
+	$types =     _node_types_build() -> types;
+	$formattedTypes = array();
+	foreach ($types as $type)
+		$formattedTypes[$type -> type] = $type -> name;
+
+	// Get formatted image fields
+	$imageFields = field_read_fields(array('type' => "image"));
+	$formattedFields = array();
+	foreach ($imageFields as $key => $field)
+		$formattedFields[$key] = $field['field_name'];
+
+	// Add type radio button
+	$form['jmcouillard_fullscrenbg_type'] = array(
+		'#type' => 'radios',
+		'#title' => t('Background content type'),
+		'#default_value' => variable_get('jmcouillard_fullscrenbg_type'),
+		'#options' => $formattedTypes,
+		'#description' => t('This content type will be used to get images.'),
+		'#required' => TRUE,
+	);
+
+	// Add type radio button
+	$form['jmcouillard_fullscrenbg_field'] = array(
+		'#type' => 'radios',
+		'#title' => t('Background field name'),
+		'#default_value' => variable_get('jmcouillard_fullscrenbg_field'),
+		'#options' => $formattedFields,
+		'#description' => t('This field contains the images to be used as background.'),
+		'#required' => TRUE,
+	);
+
+	// Add delay textfield
+	$form['jmcouillard_fullscrenbg_anim'] = array(
+		'#type' => 'radios',
+		'#title' => t('Animation'),
+		'#default_value' => variable_get('jmcouillard_fullscrenbg_anim'),
+		'#options' => array(
+			"static" => "Single random image",
+			"fade" => "Fade all images in order"
+		),
+		'#description' => t('This field contains the images to be used as background.'),
+		'#required' => TRUE,
+	);
+
+	// Add delay textfield
+	$form['jmcouillard_fullscrenbg_delay'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Fade delay in seconds (only for "fade all" animations)'),
+		'#default_value' => variable_get('jmcouillard_fullscrenbg_delay'),
+		'#size' => 6,
+		'#element_validate' => array('_isInteger'),
+		'#description' => t('This field contains the images to be used as background.'),
+		'#required' => TRUE,
+	);
+
+	return system_settings_form($form);
+}
+
+function _isInteger($element, &$form_state) {
+	if (!empty($element['#value']) && !is_numeric($element['#value'])) {
+		form_error($element, t('The "!name" option must contain an integer value.', array('!name' => t($element['title']))));
+	}
+}

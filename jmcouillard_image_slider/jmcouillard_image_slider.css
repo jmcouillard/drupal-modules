@@ -1,0 +1,45 @@
+
+#jmcouillard_image_slider {
+	position: relative;
+	display: block;
+}
+
+#jmcouillard_image_slider .wrapper img {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+}
+
+#jmcouillard_image_slider .wrapper {
+	position: relative;
+}
+
+#jmcouillard_image_slider .label {
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	z-index: 20;
+}
+
+#jmcouillard_image_slider .label .line1{
+	font-weight: bold;
+}
+
+#jmcouillard_image_slider .arrow {
+	width: 11px;
+	height: 21px;
+	position: absolute;
+	bottom: 75px;
+	z-index: 20;
+	cursor: pointer;
+}
+
+#jmcouillard_image_slider .arrow.next {
+	background: transparent url(images/arrow-right-2.png) no-repeat 0 0;
+	right: 20px;
+}
+
+#jmcouillard_image_slider .arrow.prev {
+	background: transparent url(images/arrow-left-2.png) no-repeat 0 0;
+	left: 20px;
+}

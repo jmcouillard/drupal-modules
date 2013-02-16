@@ -1,0 +1,155 @@
+<?php
+
+global $jmcouillard_image_slider_bodyclasses;
+$jmcouillard_image_slider_bodyclasses = array();
+
+/**
+ * Implementation of hook_menu().
+ */
+function jmcouillard_image_slider_field_formatter_info() {
+
+	$items = array();
+
+	$items['jmcouillard_image_slider'] = array(
+		'label' => 'Images slider',
+		'description' => 'Images in a loopable slider.',
+		'field types' => array('image'),
+    	'settings' => array(
+    		'jmcouillard_image_slider_delay' => '4000',
+    		'jmcouillard_image_slider_style' => 'slider',
+    		'jmcouillard_image_slider_width' => '640',
+    		'jmcouillard_image_slider_height' => '480',
+      	),
+	);
+
+	return $items;
+}
+
+/**
+ * Implementation of hook_field_formatter_view()
+ */
+function jmcouillard_image_slider_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+
+	$renderArray = array();
+	$settings = $display['settings'];
+
+	$modulePath = drupal_get_path('module', 'jmcouillard_image_slider');
+
+	switch ($display['type']) {
+
+		case 'jmcouillard_image_slider' :
+			$elements = array();
+			foreach ($items as $delta => $item) {
+
+				$elements[] = array(
+					'#theme' => 'image',
+					'#alt' => $item["alt"],
+					"#path" => image_style_url($settings['jmcouillard_image_slider_style'], $item['uri']),
+					"#attributes" => array("class" => "item item-" . $delta, "title" => $item["title"])
+				);
+			}
+
+			$renderArray[] = array(
+				'#prefix' => '<div id="jmcouillard_image_slider"><div class="wrapper">',
+				'content' => $elements,
+				'#suffix' => '</div><div class="label"></div></div>',
+			);
+
+			if (count($elements) > 0) {
+				global $jmcouillard_image_slider_bodyclasses;
+				$jmcouillard_image_slider_bodyclasses[] = "jmcouillard_image_slider";
+				drupal_add_css($modulePath . "/jmcouillard_image_slider.css");
+				drupal_add_js($modulePath . "/jmcouillard_image_slider.js");
+
+				$delay = $settings['jmcouillard_image_slider_delay'];
+        $width = $settings['jmcouillard_image_slider_width'] == "auto" ? '"auto"' : $settings['jmcouillard_image_slider_width'];
+        $height = $settings['jmcouillard_image_slider_height'] == "auto" ? '"auto"' : $settings['jmcouillard_image_slider_height'];
+				
+				drupal_add_js("jQuery.fn.jmcouillard_image_slider({$delay}, {$width}, {$height});", array("type" => "inline", "scope"=>"footer"));
+			}
+			break;
+	}
+
+	return $renderArray;
+}
+
+
+/**
+ * Implements hook_field_formatter_Settings_form().
+ */
+function jmcouillard_image_slider_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $form = array();
+  
+  if ($display['type'] == 'jmcouillard_image_slider') {
+    $form['jmcouillard_image_slider_delay'] = array(
+      '#title' => t("Delay"),
+      '#type' => 'textfield',
+      '#default_value' => $settings['jmcouillard_image_slider_delay'],
+      '#required' => TRUE,
+    );
+
+    $form['jmcouillard_image_slider_width'] = array(
+      '#title' => t("Width (px or 'auto')"),
+      '#type' => 'textfield',
+      '#default_value' => $settings['jmcouillard_image_slider_width'],
+      '#required' => TRUE,
+    );
+
+    $form['jmcouillard_image_slider_height'] = array(
+      '#title' => t("Height (px or 'auto')"),
+      '#type' => 'textfield',
+      '#default_value' => $settings['jmcouillard_image_slider_height'],
+      '#required' => TRUE,
+    );
+
+    $form['jmcouillard_image_slider_style'] = array(
+      '#title' => t("Image style"),
+      '#type' => 'select',
+      '#default_value' => $settings['jmcouillard_image_slider_style'],
+      "#options" => array_combine(array_keys(image_styles()), array_keys(image_styles())),
+      '#required' => TRUE,
+    );
+  }
+
+  $context = array(
+    'field' => $field,
+    'instance' => $instance,
+    'view_mode' => $view_mode
+  );
+  
+  drupal_alter('jmcouillard_image_slider_field_formatter_settings_form', $form, $form_state, $context);
+
+  return $form;
+}
+
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function jmcouillard_image_slider_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = array();
+
+  if ($display['type'] == 'jmcouillard_image_slider') {
+    $summary[] = t("Delay of ") . $settings['jmcouillard_image_slider_delay'] . " millis.";
+    $summary[] = t("Image style is ") . $settings['jmcouillard_image_slider_style'] . ".";
+    $summary[] = t("Size is ") . $settings['jmcouillard_image_slider_width'] . " x " . $settings['jmcouillard_image_slider_height'] . ".";
+    $summary = theme('item_list', array('type' => 'ul', 'items' => $summary));
+  }
+
+  return $summary;
+}
+
+
+function jmcouillard_image_slider_preprocess_html(&$vars) {
+	global $jmcouillard_image_slider_bodyclasses;
+
+	foreach ($jmcouillard_image_slider_bodyclasses as $item) {
+		$vars['classes_array'][] = $item;
+	}
+}
+?>
