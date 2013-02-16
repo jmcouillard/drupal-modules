@@ -1,0 +1,171 @@
+<?php
+
+// required_once("jmcouillard_manager_config_form.inc");
+
+global $types;
+
+function jmcouillard_manager_init() {
+
+	global $types;
+	$types = array();
+
+	$jmcouillard_manager_type = variable_get('jmcouillard_manager_type', array());
+	$jmcouillard_manager_weight_field = variable_get('jmcouillard_manager_weight_field', array());
+	$jmcouillard_manager_image_field = variable_get('jmcouillard_manager_image_field', array());
+	$jmcouillard_manager_image_field_fallback = variable_get('jmcouillard_manager_image_field_fallback', array());
+
+	foreach ($jmcouillard_manager_type as $name => $enabled) {
+		
+		if($enabled) {
+
+			// Check if content type has the specified weight field
+			$typeFields=field_info_instances("node",$name);
+			$hasWeightField=isset($typeFields[$jmcouillard_manager_weight_field]);
+			$hasFirstImageField=isset($typeFields[$jmcouillard_manager_image_field]);
+
+			// Save type to global variable
+			$types[$name] =  array(
+		     	"sortable" => $hasWeightField,
+				"deletable" => TRUE,
+				"imageField" => $hasFirstImageField ? $jmcouillard_manager_image_field : $jmcouillard_manager_image_field_fallback,
+		   );
+
+			// Sorting exception
+		 	if($hasWeightField) {
+		 		$types[$name]["order"] = "w.".$jmcouillard_manager_weight_field."_value ASC";
+		 	} 
+		}
+	}
+
+}
+
+/**
+ * Implementation of hook_block_info().
+ */
+function jmcouillard_manager_block_info() {
+
+	$blocks['jmcouillard_manager_link'] = array(
+		'info' => t('Manager link'),
+		'cache' => DRUPAL_CACHE_GLOBAL		
+	);
+
+	return $blocks;
+}
+
+/**
+ * Implementation of hook_block_view().
+ */
+function jmcouillard_manager_block_view($delta = '') {
+
+	global $types;
+
+	// Generate manager link module
+	$block = array();
+	$modulePath = base_path() . drupal_get_path('module', 'jmcouillard_manager');
+
+	switch ($delta) {
+		case 'jmcouillard_manager_link' :
+			$block['subject'] = t('<none>');
+			$block['content'] = array(
+				'#type' => 'markup',
+				'#markup' => '<div id="manger-link" style="position:fixed;top:100px;left:0px;"><a href="' . url("admin/content/manager/nodes", array('alias' => TRUE)) . '"><img src="' . $modulePath . '/jmcouillard-manager-link.png"/></a></div>',
+			);
+			break;
+	}
+	return $block;
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function jmcouillard_manager_menu() {
+
+	global $types;
+
+	$items['admin/content/manager/nodes'] = array(
+		'title' => 'Manage nodes',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('jmcouillard_manager_form'),
+		'type' => MENU_NORMAL_ITEM,
+		'access arguments' => array('jmcouillard manager'),
+    	'file' => 'jmcouillard_manager_form.inc',
+	);
+
+	// Create type subtasks
+	foreach ($types as $type => $data) {
+
+		$items['admin/content/manager/nodes/' . $type] = array(
+			'title' =>                node_type_load($type) -> name,
+			'page callback' => 'drupal_get_form',
+			'page arguments' => array(
+				'jmcouillard_manager_form',
+				$type
+			),
+			'type' => MENU_LOCAL_TASK,
+			'access arguments' => array('jmcouillard manager'),
+			'file' => 'jmcouillard_manager_form.inc',
+		);
+	}
+	
+  $items['admin/config/administration/manager'] = array(
+    'title' => 'Manager configuration',
+    'description' => 'Configuration for Private nodes module',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('jmcouillard_manager_config_form'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'jmcouillard_manager_config_form.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+	return $items;
+}
+
+/**
+ * Implementation of hook_permission().
+ */
+function jmcouillard_manager_permission() {
+	return array('jmcouillard manager' => array(
+			'title' => t('Administer with the manager'),
+			'description' => t('Perform administration tasks specific to this website.'),
+		), );
+}
+
+function jmcouillard_manager_theme() {
+	return array('jmcouillard_manager_table' => array('render element' => 'element'));
+}
+
+function _jmcouillard_manager_categories() {
+
+	$output = array();
+	$voc = taxonomy_get_tree(2);
+
+	foreach ($voc as $item) {
+		$output[$item -> tid] = $item -> name;
+	};
+
+	return $output;
+}
+
+/**
+ * Sets shutdown function to perform redirects later.
+ */
+function jmcouillard_manager_form_user_login_alter(&$form, &$form_state, $form_id) {
+	$status = variable_get('login_redirect_status', 0);
+	if ($status !== 0) {
+		$form['#submit'][] = 'jmcouillard_manager_user_login_submit';
+	}
+}
+
+function jmcouillard_manager_user_login_submit(&$form, &$form_state) {
+	//drupal_goto('admin/manager');
+}
+
+function jmcouillard_manager_wysiwyg_editor_settings_alter(&$settings, $context) {
+
+	global $useSmallCKEditor;
+
+	if ($context['profile'] -> editor == 'ckeditor' && $useSmallCKEditor) {
+		$settings['height'] = 130;
+	}
+}
+?>
