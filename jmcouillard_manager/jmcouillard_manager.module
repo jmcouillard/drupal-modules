@@ -68,7 +68,7 @@ function jmcouillard_manager_block_view($delta = '') {
 			$block['subject'] = t('<none>');
 			$block['content'] = array(
 				'#type' => 'markup',
-				'#markup' => '<div id="manager-link" style="position:fixed;top:100px;left:0px;"><a href="' . url("admin/content/manager/nodes", array('alias' => TRUE)) . '"><img src="' . $modulePath . '/jmcouillard-manager-link.png"/></a></div>',
+				'#markup' => '<div id="manager-link" style="position:fixed;top:100px;left:0px;"><a href="' . url("admin/content/manager/nodes", array('alias' => TRUE)) . '"><img src="' . $modulePath . '/jmcouillard-manager-link.png"/></a><a href="' . url("user/logout") . '"><img src="' . $modulePath . '/fdakin-manager-logout.png"/></a></div>',
 			);
 			break;
 	}

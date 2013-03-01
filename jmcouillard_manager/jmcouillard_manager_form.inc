@@ -159,6 +159,7 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
 		$results = db_query("SELECT * FROM {node} AS n WHERE n.type=:type ORDER BY n.created DESC", array(':type' => $typename));
 	}
 
+	$count = 0;
 	while ($row = $results -> fetch()) {
 
 		if (!isset($row))
@@ -214,6 +215,7 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
 		);
 
 		unset($row);
+		$count ++;
 	};
 
 	// Create textfield text area
@@ -238,13 +240,19 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
 		'#value' => $typename
 	);
 
-	//Don't forget the submit button
-	$form['actions'] = array('#type' => 'actions');
-	$form['actions']['submit'] = array(
-		'#name' => 'submit',
-		'#type' => 'submit',
-		'#value' => t('Save changes'),
-	);
+	if($count >0){
+		// Don't forget the submit button if there are some items
+		$form['actions'] = array('#type' => 'actions');
+		$form['actions']['submit'] = array(
+			'#name' => 'submit',
+			'#type' => 'submit',
+			'#value' => t('Save changes'),
+		);
+	} else {
+		// There is no items
+		$form["#prefix"] =  t("There are no item.") . $form["#prefix"];
+
+	}
 
 	// $form['actions']['add'] = array(
 	// '#name' => 'add',
