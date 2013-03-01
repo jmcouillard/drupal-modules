@@ -70,46 +70,51 @@ function theme_jmcouillard_manager_table($vars) {
 		$header[] = t('Weight');
 	}
 
-	// For each item form element
-	foreach (element_children($form['items']) as $key) {
+	// Only do table business if there are items
+	if(count(element_children($form['items']))>0) {
 
-		// Gete element to make it easier to access
-		$element = $form['items'][$key];
+		// For each item form element
+		foreach (element_children($form['items']) as $key) {
 
-		// Create row if element has an id
-		$rows[$key] = array('data' => array(
-				array('data' => $element['title']["#extra_data"]['img']),
-				array('data' => $element['title']),
-				array('data' => $element['title']["#extra_data"]['edit_link']),
-			), );
+			// Gete element to make it easier to access
+			$element = $form['items'][$key];
 
-		// Deletable field
-		if ($types[$type]["deletable"]) {
-			$rows[$key]["data"][] = array('data' => $element['title']["#extra_data"]['delete_link']);
+			// Create row if element has an id
+			$rows[$key] = array('data' => array(
+					array('data' => $element['title']["#extra_data"]['img']),
+					array('data' => $element['title']),
+					array('data' => $element['title']["#extra_data"]['edit_link']),
+				), );
+
+			// Deletable field
+			if ($types[$type]["deletable"]) {
+				$rows[$key]["data"][] = array('data' => $element['title']["#extra_data"]['delete_link']);
+			}
+
+			// Sortable field
+			if ($types[$type]["sortable"]) {
+				$rows[$key]["data"][] = array('data' => $element['weight']);
+				$rows[$key]['class'] = array('draggable');
+			}
 		}
 
-		// Sortable field
-		if ($types[$type]["sortable"]) {
-			$rows[$key]["data"][] = array('data' => $element['weight']);
-			$rows[$key]['class'] = array('draggable');
-		}
+		// Render table
+		$output .= theme('table', array(
+			'header' => $header,
+			'rows' => $rows,
+			'tree' => TRUE,
+			'attributes' => $attributes
+		));
+		
+		unset($form['items']);
+
+		// Add drag js
+		if ($types[$type]["sortable"])
+			drupal_add_tabledrag('jmcouillard_manager_form_table', 'order', 'sibling', 'retouche-manager-weight');
 	}
-
-	// Render table
-	$output .= theme('table', array(
-		'header' => $header,
-		'rows' => $rows,
-		'tree' => TRUE,
-		'attributes' => $attributes
-	));
-	unset($form['items']);
 
 	// Render other form items
 	$output .= drupal_render_children($form);
-
-	// Add drag js
-	if ($types[$type]["sortable"])
-		drupal_add_tabledrag('jmcouillard_manager_form_table', 'order', 'sibling', 'retouche-manager-weight');
 
 	// Render and return
 	return $output;
