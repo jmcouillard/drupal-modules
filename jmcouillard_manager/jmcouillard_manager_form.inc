@@ -254,14 +254,20 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
 
 	}
 
-	// $form['actions']['add'] = array(
-	// '#name' => 'add',
-	// '#type' => 'submit',
-	// '#value' => t('Add new'),
-	// '#submit' => array('_jmcouillard_manager_add_new'),
-	// );
+	$form['actions']['add'] = array(
+		'#name' => 'add',
+		'#type' => 'submit',
+		'#value' => t('Create a new item'),
+		'#submit' => array('_jmcouillard_manager_add_new'),
+	);
 
 	return $form;
 }
+
+function _jmcouillard_manager_add_new(&$vars) {
+	$type = $vars['global']['type']["#value"];
+	drupal_goto("node/add/".$type);
+}
+
 
 ?>
