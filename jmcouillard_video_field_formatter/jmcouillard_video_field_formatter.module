@@ -13,9 +13,10 @@ function jmcouillard_video_field_formatter_field_formatter_info() {
     'description' => 'Give me an url, I will give you an embed player.',
     'field types' => array('text'),
     'settings' => array(
-  		'jmcouillard_video_field_formatter_width' => '640',
-  		'jmcouillard_video_field_formatter_height' => '480',
-    	),
+      'jmcouillard_video_field_formatter_width' => '640',
+      'jmcouillard_video_field_formatter_height' => '480',
+      'jmcouillard_video_field_formatter_api' => FALSE,
+      ),
   );
   
     
@@ -39,6 +40,8 @@ function jmcouillard_video_field_formatter_field_formatter_view($entity_type, $e
       
       $height = $settings['jmcouillard_video_field_formatter_height'];
       $height = is_numeric($height) ? $height . "px" : $height;
+
+      $api = $settings['jmcouillard_video_field_formatter_api'] ? "api=1&amp;" : "";
     
       foreach ($items as $delta => $item) {
 
@@ -47,7 +50,7 @@ function jmcouillard_video_field_formatter_field_formatter_view($entity_type, $e
           $id = str_replace('https://', '', $id);
           $id = str_replace('www.', '', $id);
           $id = str_replace('vimeo.com/', '', $id);
-          $element[$delta] = array('#markup' => '<iframe src="http://player.vimeo.com/video/' . $id . '/?api=1&amp;portrait=0" width="410" height="230" frameborder="0" webkitallowfullscreen="" allowfullscreen="" style="width: ' . $width . '; height: ' . $height . '; "></iframe>');
+          $element[$delta] = array('#markup' => '<iframe src="http://player.vimeo.com/video/' . $id . '/?' . $api . 'portrait=0" width="410" height="230" frameborder="0" webkitallowfullscreen="" allowfullscreen="" style="width: ' . $width . '; height: ' . $height . '; "></iframe>');
         
         } else if(strstr($item['value'], "youtube")) {
           $id = str_replace('http://', '', $item['value']);
@@ -91,6 +94,12 @@ function jmcouillard_video_field_formatter_field_formatter_settings_form($field,
       '#type' => 'textfield',
       '#default_value' => $settings['jmcouillard_video_field_formatter_height'],
       '#required' => TRUE,
+    );
+
+    $form['jmcouillard_video_field_formatter_api'] = array(
+      '#title' => t("Use API"),
+      '#type' => 'checkbox',
+      '#default_value' => $settings['jmcouillard_video_field_formatter_api'],
     );
   }
 
