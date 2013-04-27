@@ -73,8 +73,9 @@
 
 		var line1 = $("#jmcouillard_image_slider img").eq(currentIndex).attr("alt");
 		var line2 = $("#jmcouillard_image_slider img").eq(currentIndex).attr("title");
-
-		$("#jmcouillard_image_slider .label").html("<div class='line1'>" + line1 + "</div><div class='line2'>" + line2 + "</div>");
+		
+		$(".line1, .line2", "#jmcouillard_image_slider .label").remove();
+		$("#jmcouillard_image_slider .label").append("<div class='line1'>" + line1 + "</div><div class='line2'>" + line2 + "</div>");
 	};
 	
 })(jQuery);
