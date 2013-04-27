@@ -120,11 +120,14 @@ function theme_jmcouillard_manager_table($vars) {
 	return $output;
 }
 
-function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
+function jmcouillard_manager_form($form, &$form_state, $typename = NULL, $subcategory = NULL) {
 
 	//	$types = jmcouillard_manager_types();
 
 	global $types;
+
+	dpm("typename " . $typename);
+	dpm("subcategory " . $subcategory);
 
 	// Set default typename if not defined
 	if(!isset($typename)) {
@@ -134,6 +137,7 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
 	// Define dynamic fields
 	$definedWeightField = variable_get('jmcouillard_manager_weight_field', "");
 	$definedImageField = $types[$typename]["imageField"];
+	$definedSubcagtegoryField = $types[$typename]["subcategoryField"];
 	$definedImageStyle = variable_get('jmcouillard_manager_thumb_style', "");
 
 	// Load content type
@@ -159,6 +163,8 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
 		$results = db_query("SELECT * FROM {node} AS n WHERE n.type=:type ORDER BY n.created DESC", array(':type' => $typename));
 	}
 
+			dpm($definedSubcagtegoryField);
+
 	$count = 0;
 	while ($row = $results -> fetch()) {
 
@@ -167,6 +173,27 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
 
 		// Load node
 		$node = node_load($row -> nid);
+
+		if(isset($subcategory)) {
+
+			// dpm($node);
+
+			if (isset($node -> {$definedSubcagtegoryField})) {
+
+				$found = FALSE;
+
+				foreach($node->{$definedSubcagtegoryField}["und"] as $key => $item) {
+					if($item["tid"] == $subcategory) $found = TRUE;
+
+
+				}
+
+				if(!$found) continue;
+
+			} else {
+				continue;
+			}
+		}
 
 		// Create data
 		$data = array();
@@ -189,10 +216,6 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL) {
 		$data['img'] = l(theme_image(array(
 			"path" => $data['img_url'],
 			"title" => $node -> title,
-			"attributes" => array(
-				"width" => 100,
-				"height" => 100
-			)
 		)), ("node/" . $node -> nid), array("html" => TRUE));
 
 		$field_weight = array( 

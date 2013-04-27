@@ -21,11 +21,19 @@ function jmcouillard_manager_config_form($form, &$form_state) {
   $processedImageFields = array();
   foreach($imageFields as $key=>$field) $processedImageFields[$key] = $field['field_name'];
   
+  // Get term fields
+  $taxonomyFields = field_read_fields(array('type'=>"taxonomy_term_reference"));
+  $processedTaxonomyFields = array();
+  foreach($taxonomyFields as $key=>$field) $processedTaxonomyFields[$key] = $field['field_name'];
+
   // Get styles
   $styles = image_styles();
   $processedStyles = array();
   foreach($styles as $key=>$field) $processedStyles[$key] = $field['name'];
-  
+
+  // Get voacubularies
+  $voc = taxonomy_get_vocabularies();
+  foreach($voc as $key=>$item) $processedVoc[$item->machine_name] = $item->name;  
 
   // Add content type selection
   $form['jmcouillard_manager_type'] = array(
@@ -47,8 +55,15 @@ function jmcouillard_manager_config_form($form, &$form_state) {
     '#required' => TRUE,
   );
 
+  // Add image fieldset
+  $form['jmcouillard_manager_image'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Image'),
+    '#collapsible' => TRUE,
+  );
+
   // Add image field selection
-  $form['jmcouillard_manager_image_field'] = array(
+  $form['jmcouillard_manager_image']['jmcouillard_manager_image_field'] = array(
     '#type' => 'radios',
     '#title' => t('Image field'),
     '#default_value' => variable_get('jmcouillard_manager_image_field'),
@@ -57,7 +72,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
     '#required' => TRUE,
   );
   // Add image field selection
-  $form['jmcouillard_manager_image_field_fallback'] = array(
+  $form['jmcouillard_manager_image']['jmcouillard_manager_image_field_fallback'] = array(
     '#type' => 'radios',
     '#title' => t('Fallback image field'),
     '#default_value' => variable_get('jmcouillard_manager_image_field_fallback'),
@@ -67,7 +82,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
   );
 
   // Add thumbnail style selection
-  $form['jmcouillard_manager_thumb_style'] = array(
+  $form['jmcouillard_manager_image']['jmcouillard_manager_thumb_style'] = array(
     '#type' => 'radios',
     '#title' => t('Image style'),
     '#default_value' => variable_get('jmcouillard_manager_thumb_style'),
@@ -75,6 +90,37 @@ function jmcouillard_manager_config_form($form, &$form_state) {
     '#description' => t('Image style used to display thumbnail.'),
     '#required' => TRUE,
   );
+
+  // Add subcategory fieldset
+  $form['jmcouillard_manager_subcategory'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Subcategory'),
+    '#collapsible' => TRUE,
+  );
+
+  // Add subcategory vocabulary selection
+  $form['jmcouillard_manager_subcategory']['jmcouillard_manager_subcategory_vocabulary'] = array(
+    '#type' => 'select',
+    '#title' => t('Subcategory vocabulary'),
+    '#default_value' => variable_get('jmcouillard_manager_subcategory_vocabulary', array()),
+    '#empty_value' => -1,
+    '#options' => $processedVoc,
+    '#description' => t('Vocabulary to use as subcategories'),
+    '#required' => FALSE,
+    '#group' => 'vertical_tabs',
+  );
+  
+  // Add image field selection
+  $form['jmcouillard_manager_subcategory']['jmcouillard_manager_subcategory_field'] = array(
+    '#type' => 'select',
+    '#title' => t('Subcategory field'),
+    '#default_value' => variable_get('jmcouillard_manager_subcategory_field'),
+    '#options' => $processedTaxonomyFields,
+    '#description' => t('The module will look into this field to filter the nodes by subcategories.'),
+    '#required' => TRUE,
+  );
+
+
 
   return system_settings_form($form);
 }
