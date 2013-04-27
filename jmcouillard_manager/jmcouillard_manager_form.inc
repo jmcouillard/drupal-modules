@@ -158,8 +158,6 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL, $subcat
 		$results = db_query("SELECT * FROM {node} AS n WHERE n.type=:type ORDER BY n.created DESC", array(':type' => $typename));
 	}
 
-			dpm($definedSubcagtegoryField);
-
 	$count = 0;
 	while ($row = $results -> fetch()) {
 
@@ -171,7 +169,6 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL, $subcat
 
 		if(isset($subcategory)) {
 
-			// dpm($node);
 
 			if (isset($node -> {$definedSubcagtegoryField})) {
 
