@@ -122,12 +122,7 @@ function theme_jmcouillard_manager_table($vars) {
 
 function jmcouillard_manager_form($form, &$form_state, $typename = NULL, $subcategory = NULL) {
 
-	//	$types = jmcouillard_manager_types();
-
 	global $types;
-
-	dpm("typename " . $typename);
-	dpm("subcategory " . $subcategory);
 
 	// Set default typename if not defined
 	if(!isset($typename)) {
