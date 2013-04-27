@@ -20,6 +20,7 @@ function jmcouillard_manager_form_submit($form, &$form_state) {
 
 			$node = node_load($nid);
 			$node -> title = $item['title'];
+			$node -> status = $item['status'];
 			$node -> {$definedWeightField}['und'][0]['value'] = $item['weight'];
 
 			node_save($node);
@@ -56,6 +57,7 @@ function theme_jmcouillard_manager_table($vars) {
 	// Create table header <th> : must be same count as td, otherwise tabledrag won't work.
 	$header = array(
 		t('Preview'),
+		t('Status'),
 		t('Title'),
 		t('Edit')
 	);
@@ -82,6 +84,7 @@ function theme_jmcouillard_manager_table($vars) {
 			// Create row if element has an id
 			$rows[$key] = array('data' => array(
 					array('data' => $element['title']["#extra_data"]['img']),
+					array('data' => $element['status']),
 					array('data' => $element['title']),
 					array('data' => $element['title']["#extra_data"]['edit_link']),
 				), );
@@ -191,6 +194,7 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL, $subcat
 		$data = array();
 		$data['nid'] = $node -> nid;
 		$data['title'] = $node -> title;
+		$data['status'] = $node -> status;
 		$data['weight'] = isset($node -> {$definedWeightField}['und']) ? $node -> {$definedWeightField}['und'][0]['value'] : 0;
 		$data['edit_link'] = l(t('edit'), 'node/' . $node -> nid . '/edit', array('query' => array('destination' => '/admin/content/manager/nodes/' . $typename)));
 		$data['delete_link'] = l(t('delete'), 'node/' . $node -> nid . '/delete', array('query' => array('destination' => '/admin/content/manager/nodes/' . $typename)));
@@ -224,9 +228,15 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL, $subcat
 			'#extra_data' => $data,
 		);
 
+		$field_status = array(
+			'#type' => 'checkbox',
+			'#default_value' => $data['status'],
+		);
+
 		$form['items'][$data['nid']] = array(
 			"weight" => $field_weight,
-			"title" => $field_title
+			"title" => $field_title,
+			"status" => $field_status,
 		);
 
 		unset($row);
