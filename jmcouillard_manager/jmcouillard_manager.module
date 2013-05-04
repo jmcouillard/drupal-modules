@@ -11,10 +11,10 @@ function jmcouillard_manager_init() {
 
 	$jmcouillard_manager_type = variable_get('jmcouillard_manager_type', array());
 	$jmcouillard_manager_content["taxonomy_term"]  = variable_get('jmcouillard_manager_voc', array());
-	$jmcouillard_manager_subcategory_field = variable_get('jmcouillard_manager_subcategory_field', array());
-	$jmcouillard_manager_weight_field = variable_get('jmcouillard_manager_weight_field', array());
-	$jmcouillard_manager_image_field = variable_get('jmcouillard_manager_image_field', array());
-	$jmcouillard_manager_image_field_fallback = variable_get('jmcouillard_manager_image_field_fallback', array());
+	$jmcouillard_manager_subcategory_field = variable_get('jmcouillard_manager_subcategory_field', 0);
+	$jmcouillard_manager_weight_field = variable_get('jmcouillard_manager_weight_field', 0);
+	$jmcouillard_manager_image_field = variable_get('jmcouillard_manager_image_field', 0);
+	$jmcouillard_manager_image_field_fallback = variable_get('jmcouillard_manager_image_field_fallback', 0);
 
 	foreach ($jmcouillard_manager_type as $name => $enabled) {
 		

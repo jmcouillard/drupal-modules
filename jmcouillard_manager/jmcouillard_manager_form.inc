@@ -212,6 +212,7 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL, $subcat
 		$data['img'] = l(theme_image(array(
 			"path" => $data['img_url'],
 			"title" => $node -> title,
+			"attributes" => array(),
 		)), ("node/" . $node -> nid), array("html" => TRUE));
 
 		$field_weight = array( 

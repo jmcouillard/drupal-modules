@@ -4,7 +4,7 @@
 	display: block;
 }
 
-#jmcouillard_image_slider .wrapper img {
+#jmcouillard_image_slider .wrapper .item {
 	position: absolute;
 	top: 0px;
 	left: 0px;

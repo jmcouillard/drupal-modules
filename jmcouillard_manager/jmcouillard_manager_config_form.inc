@@ -91,34 +91,37 @@ function jmcouillard_manager_config_form($form, &$form_state) {
     '#required' => TRUE,
   );
 
-  // Add subcategory fieldset
-  $form['jmcouillard_manager_subcategory'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Subcategory'),
-    '#collapsible' => TRUE,
-  );
+  if(count($voc) > 0) {
+    
+    // Add subcategory fieldset
+    $form['jmcouillard_manager_subcategory'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Subcategory'),
+      '#collapsible' => TRUE,
+    );
 
-  // Add subcategory vocabulary selection
-  $form['jmcouillard_manager_subcategory']['jmcouillard_manager_subcategory_vocabulary'] = array(
-    '#type' => 'select',
-    '#title' => t('Subcategory vocabulary'),
-    '#default_value' => variable_get('jmcouillard_manager_subcategory_vocabulary', array()),
-    '#empty_value' => -1,
-    '#options' => $processedVoc,
-    '#description' => t('Vocabulary to use as subcategories'),
-    '#required' => FALSE,
-    '#group' => 'vertical_tabs',
-  );
+    // Add subcategory vocabulary selection
+    $form['jmcouillard_manager_subcategory']['jmcouillard_manager_subcategory_vocabulary'] = array(
+      '#type' => 'select',
+      '#title' => t('Subcategory vocabulary'),
+      '#default_value' => variable_get('jmcouillard_manager_subcategory_vocabulary', array()),
+      '#empty_value' => -1,
+      '#options' => $processedVoc,
+      '#description' => t('Vocabulary to use as subcategories'),
+      '#required' => FALSE,
+      '#group' => 'vertical_tabs',
+    );
   
-  // Add image field selection
-  $form['jmcouillard_manager_subcategory']['jmcouillard_manager_subcategory_field'] = array(
-    '#type' => 'select',
-    '#title' => t('Subcategory field'),
-    '#default_value' => variable_get('jmcouillard_manager_subcategory_field'),
-    '#options' => $processedTaxonomyFields,
-    '#description' => t('The module will look into this field to filter the nodes by subcategories.'),
-    '#required' => TRUE,
-  );
+    // Add image field selection
+    $form['jmcouillard_manager_subcategory']['jmcouillard_manager_subcategory_field'] = array(
+      '#type' => 'select',
+      '#title' => t('Subcategory field'),
+      '#default_value' => variable_get('jmcouillard_manager_subcategory_field'),
+      '#options' => $processedTaxonomyFields,
+      '#description' => t('The module will look into this field to filter the nodes by subcategories.'),
+      '#required' => TRUE,
+    );
+  }
 
 
 
