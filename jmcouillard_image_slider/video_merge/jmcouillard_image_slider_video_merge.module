@@ -1,0 +1,139 @@
+<?php
+
+/**
+ * Implementation of hook_menu().
+ */
+function jmcouillard_image_slider_video_merge_field_formatter_info() {
+
+	$items = array();
+
+	$items['jmcouillard_image_slider_video_merge'] = array(
+		'label' => 'Image slider video merge',
+		'description' => 'Prepend vimeo embed player to a an image slider.',
+		'field types' => array('text'),
+    	'settings' => array(
+        'jmcouillard_image_slider_video_merge_width' => '640',
+        'jmcouillard_image_slider_video_merge_height' => '480',
+      	),
+	);
+
+	return $items;
+}
+
+/**
+ * Implementation of hook_field_formatter_view()
+ */
+function jmcouillard_image_slider_video_merge_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
+
+	$renderArray = array();
+  $settings = $display['settings'];
+
+  $modulePath = drupal_get_path('module', 'jmcouillard_image_slider_video_merge');
+
+	switch ($display['type']) {
+
+		case 'jmcouillard_image_slider_video_merge' :
+
+			$elements = array();
+
+			foreach ($items as $delta => $item) {
+
+        if(strstr($item['value'], "vimeo")) {
+          $id = str_replace('http://', '', $item['value']);
+          $id = str_replace('https://', '', $id);
+          $id = str_replace('www.', '', $id);
+          $id = str_replace('vimeo.com/', '', $id);
+          $elements[$delta] = array('#markup' => '<iframe class="item vimeo" id="vimeo'. $delta .'" src="http://player.vimeo.com/video/' . $id . '/?api=1&amp;portrait=0&amp;player_id=vimeo'. $delta . '" width="410" height="230" frameborder="0" webkitallowfullscreen="" allowfullscreen="" style="width: ' . $width . '; height: ' . $height . '; "></iframe>');
+        
+        } else if(strstr($item['value'], "youtube")) {
+          $id = str_replace('http://', '', $item['value']);
+          $id = str_replace('https://', '', $id);
+          $id = str_replace('www.', '', $id);
+          $id = str_replace('youtube.com/watch?v=', '', $id);
+          $elements[$delta] = array('#markup' => '<iframe class="item youtube" id="youtube'. $delta .'" src="http://www.youtube.com/embed/' . $id . '?enablejsapi=1&amp;playerapiid=youtube'. $delta . '" width="410" height="230" frameborder="0" webkitallowfullscreen="" allowfullscreen="" style="width: ' . $width . '; height: ' . $height . '; "></iframe>');
+
+        } else {
+
+          $elements[$delta] = array('#markup' => 'Not found');
+        }
+        
+      }
+
+			if (count($elements) > 0) {
+        $width = $settings['jmcouillard_image_slider_video_merge_width'];
+        $height = $settings['jmcouillard_image_slider_video_merge_height'];
+
+        drupal_add_js($modulePath . "/jmcouillard_image_slider_video_merge.js");
+        drupal_add_js("https://www.youtube.com/iframe_api", array("type" => "external"));
+
+
+				drupal_add_js("jQuery.fn.jmcouillard_image_slider_video_merge({$width}, {$height});", array("type" => "inline", "scope"=>"footer", "counter" => $counter));
+
+			}
+	}
+
+  $renderArray[] = array(
+    '#prefix' => '<div id="jmcouillard_image_slider_video_merge">',
+    'content' => $elements,
+    '#suffix' => '</div>',
+  );
+
+	return $renderArray;
+}
+
+
+/**
+ * Implements hook_field_formatter_Settings_form().
+ */
+function jmcouillard_image_slider_video_merge_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+  $form = array();
+  
+  if ($display['type'] == 'jmcouillard_image_slider_video_merge') {
+    $form['jmcouillard_image_slider_video_merge_width'] = array(
+      '#title' => t("Width (px')"),
+      '#type' => 'textfield',
+      '#default_value' => $settings['jmcouillard_image_slider_video_merge_width'],
+      '#required' => TRUE,
+    );
+
+    $form['jmcouillard_image_slider_video_merge_height'] = array(
+      '#title' => t("Height (px)"),
+      '#type' => 'textfield',
+      '#default_value' => $settings['jmcouillard_image_slider_video_merge_height'],
+      '#required' => TRUE,
+    );
+  }
+
+  $context = array(
+    'field' => $field,
+    'instance' => $instance,
+    'view_mode' => $view_mode
+  );  $settings = $display['settings']; $settings = $display['settings'];
+
+  return $form;
+}
+
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function jmcouillard_image_slider_video_merge_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = array();
+
+  if ($display['type'] == 'jmcouillard_image_slider_video_merge') {
+    $summary[] = t("Size is ") . $settings['jmcouillard_image_slider_video_merge_width'] . " x " . $settings['jmcouillard_image_slider_video_merge_height'] . ".";
+    $summary = theme('item_list', array('type' => 'ul', 'items' => $summary));
+  }
+
+  return $summary;
+}
+
+
+
+?>

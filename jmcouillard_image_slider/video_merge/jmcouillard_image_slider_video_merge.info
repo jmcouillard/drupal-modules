@@ -1,0 +1,5 @@
+name = Image slider video merge
+description = Prepend vimeo embed player to a an image slider.
+package = jmcouillard
+core = 7.x
+php = 5.2

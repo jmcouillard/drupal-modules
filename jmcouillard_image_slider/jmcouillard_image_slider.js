@@ -83,7 +83,7 @@
 		var line2 = items.eq(currentIndex).attr("title");
 
 		line1 = (line1 == undefined) ? "" : line1;
-		line2 = (line2 == undefined) ? "" : line1;
+		line2 = (line2 == undefined) ? "" : line2;
 
 		$("#jmcouillard_image_slider .label").html("<div class='line1'>" + line1 + "</div><div class='line2'>" + line2 + "</div>");
 	};
