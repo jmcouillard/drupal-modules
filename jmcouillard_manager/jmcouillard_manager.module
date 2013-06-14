@@ -88,6 +88,7 @@ function jmcouillard_manager_block_view($delta = '') {
 function jmcouillard_manager_menu() {
 
 	global $types;
+	if(!isset($types)) $types = array();
 
 	$subcategoryVocabulary = variable_get('jmcouillard_manager_subcategory_vocabulary', FALSE);
 	if($subcategoryVocabulary) {

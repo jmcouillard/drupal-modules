@@ -127,11 +127,15 @@ function jmcouillard_manager_form($form, &$form_state, $typename = NULL, $subcat
 
 	global $types;
 
+	if(count($types) == 0) return array(
+		'#suffix' => 'No managed type(s) have been set.',
+	);
+
 	// Set default typename if not defined
 	if(!isset($typename)) {
 		$typename = array_shift(array_keys($types));
 	}
-
+	
 	// Define dynamic fields
 	$definedWeightField = variable_get('jmcouillard_manager_weight_field', "");
 	$definedImageField = $types[$typename]["imageField"];

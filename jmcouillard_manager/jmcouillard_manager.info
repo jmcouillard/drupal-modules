@@ -3,5 +3,6 @@ description = Rerorder, edit and delete nodes in a friendly way.
 package = jmcouillard
 core = 7.x
 php = 5.2
+dependencies[] = taxonomy
 configure = admin/config/administration/manager
 version = "7.x-0.1"
