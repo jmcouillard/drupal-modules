@@ -1,0 +1,51 @@
+<?php
+
+/**
+ * Implementation of hook_menu(). It routes pages to functions.
+ */
+function simple_custom_frontpage_menu() {
+
+  $items = array();
+  
+  $items['front'] = array(
+    'title' => 'Front',
+    'description' => 'Simple custom frontpage',
+    'page callback' => 'mmms_front_page',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  
+  return $items;
+}
+
+
+/**
+ * Implementation of hook_nodeapi().
+ * @link http://api.drupal.org/api/function/hook_nodeapi/6
+ */
+function simple_custom_frontpage_page() {
+
+  $output = array();
+
+  // Embed node 1
+  $accueilNode = node_load(1);
+  $output[] = drupal_render(node_view($accueilNode));
+
+  // Embed 'all_ateliers' view
+  $output[] = views_embed_view('all_ateliers');
+
+  // Embed node 2
+  $wecfNode = node_load(2);
+  $output[]= drupal_render(node_view($wecfNode));
+  
+  // Embed 'equipe' view
+  $output[] = views_embed_view('equipe');
+
+  // Embed 'partenaires' view
+  $output[] = views_embed_view('partenaires');
+
+  // Define a separator
+  $separator = '<div class="separator"><div class="up"></div></div>';
+  
+	return implode($output, $separator);
+}
