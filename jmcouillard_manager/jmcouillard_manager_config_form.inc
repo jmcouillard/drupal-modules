@@ -33,14 +33,25 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 
   // Get voacubularies
   $voc = taxonomy_get_vocabularies();
+  $processedVoc = array();
   foreach($voc as $key=>$item) $processedVoc[$item->machine_name] = $item->name;  
 
   // Add content type selection
   $form['jmcouillard_manager_type'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Managed content type'),
-    '#default_value' => variable_get('jmcouillard_manager_type'),
+    '#default_value' => variable_get('jmcouillard_manager_type', array()),
     '#options' => $processedTypes,
+    '#description' => t('Only the selected content type will be protected.'),
+    '#required' => TRUE,
+  );
+
+  // Add vocabularies selection
+  $form['jmcouillard_manager_voc'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Managed vocabularies'),
+    '#default_value' => variable_get('jmcouillard_manager_voc', array()),
+    '#options' => $processedVoc,
     '#description' => t('Only the selected content type will be protected.'),
     '#required' => TRUE,
   );
