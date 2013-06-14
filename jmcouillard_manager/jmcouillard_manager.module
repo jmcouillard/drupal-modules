@@ -90,8 +90,8 @@ function jmcouillard_manager_menu() {
 	global $types;
 	if(!isset($types)) $types = array();
 
-	$subcategoryVocabulary = variable_get('jmcouillard_manager_subcategory_vocabulary', FALSE);
-	if($subcategoryVocabulary) {
+	$subcategoryVocabulary = variable_get('jmcouillard_manager_subcategory_vocabulary', -1);
+	if($subcategoryVocabulary != -1) {
 		$vid = taxonomy_vocabulary_machine_name_load($subcategoryVocabulary)->vid;
 		$subcategoryTerms = taxonomy_get_tree($vid);
 	}

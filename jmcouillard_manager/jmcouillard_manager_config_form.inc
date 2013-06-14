@@ -105,11 +105,11 @@ function jmcouillard_manager_config_form($form, &$form_state) {
       '#type' => 'select',
       '#title' => t('Subcategory vocabulary'),
       '#default_value' => variable_get('jmcouillard_manager_subcategory_vocabulary', array()),
-      '#empty_value' => -1,
       '#options' => $processedVoc,
       '#description' => t('Vocabulary to use as subcategories'),
+      '#empty_value' => -1,
       '#required' => FALSE,
-      '#group' => 'vertical_tabs',
+      // '#group' => 'vertical_tabs',
     );
   
     // Add image field selection
@@ -119,7 +119,8 @@ function jmcouillard_manager_config_form($form, &$form_state) {
       '#default_value' => variable_get('jmcouillard_manager_subcategory_field'),
       '#options' => $processedTaxonomyFields,
       '#description' => t('The module will look into this field to filter the nodes by subcategories.'),
-      '#required' => TRUE,
+      '#empty_value' => -1,
+      '#required' => FALSE,
     );
   }
 
