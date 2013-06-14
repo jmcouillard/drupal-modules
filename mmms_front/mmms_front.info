@@ -1,4 +1,0 @@
-name = MMMS Front page
-description = "Render front page."
-core = 7.x
-package = jmcouillard
