@@ -6,10 +6,8 @@ function jmcouillard_manager_form_validate($form, &$form_state) {
 
 function jmcouillard_manager_form_submit($form, &$form_state) {
 
-	// global $types;
-
 	// Define dynamic fields
-	$definedWeightField = variable_get('jmcouillard_manager_weight_field', "");
+	$weightField = variable_get('jmcouillard_manager_weight_field', "");
 
 	// For each item form element
 	if (isset($form_state['values']['items'])) {
@@ -21,7 +19,7 @@ function jmcouillard_manager_form_submit($form, &$form_state) {
 
 				$node = node_load($id);
 				$node -> title = $item['title'];
-				$node -> {$definedWeightField}['und'][0]['value'] = $item['weight'];
+				$node -> {$weightField}['und'][0]['value'] = $item['weight'];
 
 				node_save($node);
 
@@ -30,7 +28,7 @@ function jmcouillard_manager_form_submit($form, &$form_state) {
 
 				$term = taxonomy_term_load($id);
 				$term -> name =  $item['title'];
-				$term -> weight =  $item['title'];
+				$term -> weight =  $item['weight'];
 
 				taxonomy_term_save($term);
 			}
@@ -137,10 +135,10 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	}
 
 	// Define dynamic fields
-	$definedWeightField = variable_get('jmcouillard_manager_weight_field', "");
-	$definedImageField = $managed[$name]["imageField"];
+	$weightField = variable_get('jmcouillard_manager_weight_field', "");
+	$imageField = $managed[$name]["imageField"];
 	$definedSubcagtegoryField = $managed[$name]["subcategoryField"];
-	$definedImageStyle = variable_get('jmcouillard_manager_thumb_style', "");
+	$thumbImageStyle = variable_get('jmcouillard_manager_thumb_style', "");
 
 	// Define module path
 	$modulePath = drupal_get_path('module', 'jmcouillard_manager');
@@ -148,18 +146,16 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	// Add custom css
 	drupal_add_css($modulePath  . "/jmcouillard_manager_form_table.css");
 
+	// Create form
 	$form = array(
-		'#prefix' => '<div id="people">',
-		'#suffix' => '</div>',
 		'#theme' => 'jmcouillard_manager_table',
+		'items' => array('#tree' => TRUE),
 	);
-
-	$form['items']['#tree'] = TRUE;
 
 	if($type == "node") {
 
 		if($managed[$name]["sortable"]) {
-			$results = db_query("SELECT * FROM {node} AS n LEFT JOIN {field_data_".$definedWeightField."} AS w ON n.nid = w.entity_id WHERE n.type=:type ORDER BY " . $managed[$name]["order"], array(':type' => $name));
+			$results = db_query("SELECT * FROM {node} AS n LEFT JOIN {field_data_".$weightField."} AS w ON n.nid = w.entity_id WHERE n.type=:type ORDER BY " . $managed[$name]["order"], array(':type' => $name));
 		} else {
 			$results = db_query("SELECT * FROM {node} AS n WHERE n.type=:type ORDER BY n.created DESC", array(':type' => $name));
 		}
@@ -196,15 +192,17 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		}
 
 		// Create data
-		$data = array();
-		$data['nid'] = $entityId;
-		$data['title'] = $entityTitle;
+		$data = array(
+			"nid"=>$entityId,
+			"title"=>$entityTitle,
+			"weight"=>0
+		);
+
+		// Define weight
 		if($type == "node") {
-			$data['weight'] = isset($entity -> {$definedWeightField}['und'])  ? $entity -> {$definedWeightField}['und'][0]['value'] : 0;
+			$data['weight'] = isset($entity -> {$weightField}['und'])  ? $entity -> {$weightField}['und'][0]['value'] : 0;
 		} else if($type == "taxonomy_term") {
 			$data['weight'] = $entity -> weight ;
-		} else {
-			$data['weight'] = 0;
 		}
 
 		// Link prefix
@@ -213,15 +211,13 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		$data['delete_link'] = l(t('delete'),  $baseLinkPath . $entityId . '/delete', array('query' => array('destination' => '/admin/content/manager/' . $name)));
 
 		// Define image url (for thumbnail)
-		if (isset($entity -> {$definedImageField}["und"])) {
-			$data['img_url'] = image_style_url($definedImageStyle, $entity -> {$definedImageField}["und"][0]["uri"]);
-		} else if (isset($entity -> {$definedImageField}["und"])) {
-			$data['img_url'] = image_style_url($definedImageStyle, $entity -> {$definedImageField}["und"][0]["uri"]);
+		if (isset($entity -> {$imageField}["und"])) {
+			$data['img_url'] = image_style_url($thumbImageStyle, $entity -> {$imageField}["und"][0]["uri"]);
 		} else {
 			$data['img_url'] = $modulePath . "/jmcouillard_manager_default.png";
 		}
 
-		// Define image uri
+		// Define image url
 		$data['img'] = l(theme_image(array(
 			"path" => $data['img_url'],
 			"title" => $entityTitle,
@@ -293,7 +289,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		'#name' => 'add',
 		'#type' => 'submit',
 		'#value' => t('Add new'),
-		'#submit' => array('jmcouillard_manager_form_add'),
+		'#submit' => array('_jmcouillard_manager_form_add'),
 	);
 
 	// Update title
@@ -302,7 +298,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	return $form;
 }
 
-function jmcouillard_manager_form_add($form, &$form_state) {
+function _jmcouillard_manager_form_add($form, &$form_state) {
 
 	if (isset($form_state['values'])) {
 		$type = $form_state["build_info"]["args"][0];
@@ -312,5 +308,6 @@ function jmcouillard_manager_form_add($form, &$form_state) {
 		else if($type=="taxonomy_term") drupal_goto("admin/structure/taxonomy/" . $name . "/add");
 	};
 }
+
 
 ?>
