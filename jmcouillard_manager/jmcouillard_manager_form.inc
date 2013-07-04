@@ -139,6 +139,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	$imageField = $managed[$name]["imageField"];
 	$definedSubcagtegoryField = $managed[$name]["subcategoryField"];
 	$thumbImageStyle = variable_get('jmcouillard_manager_thumb_style', "");
+	$useForm = ($managed[$name]["form"] != "");
 
 	// Define module path
 	$modulePath = drupal_get_path('module', 'jmcouillard_manager');
@@ -207,7 +208,15 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 
 		// Link prefix
 		$baseLinkPath = ($type == "node") ? "node/" : "taxonomy/term/";
-		$data['edit_link'] = l(t('edit'), $baseLinkPath . $entityId . '/edit', array('query' => array('destination' => '/admin/content/manager/' . $name)));
+		
+		// Edit link
+		if(!$useForm) {
+			$data['edit_link'] = l(t('edit'), $baseLinkPath . $entityId . '/edit', array('query' => array('destination' => '/admin/content/manager/' . $name)));
+		} else {
+			$data['edit_link'] = l(t('edit'), "admin/content/manager/edit/" . $name. "/" . $entityId . '/edit', array('query' => array('destination' => '/admin/content/manager/' . $name)));			
+		}
+		
+		// Delete link
 		$data['delete_link'] = l(t('delete'),  $baseLinkPath . $entityId . '/delete', array('query' => array('destination' => '/admin/content/manager/' . $name)));
 
 		// Define image url (for thumbnail)
@@ -222,8 +231,8 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 			"path" => $data['img_url'],
 			"title" => $entityTitle,
 			"attributes" => array(
-				"width" => 100,
-				"height" => 100
+				// "width" => 100,
+				// "height" => 100
 			)
 		)), ("node/" . $entityId), array("html" => TRUE));
 
@@ -236,8 +245,8 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		);
 
 		$field_title = array(
-			'#type' => 'textfield',
-			'#default_value' => $data['title'],
+			'#type' => 'markup',
+			'#markup' => $data['title'],
 			'#extra_data' => $data,
 		);
 
@@ -270,7 +279,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		$useSmallCKEditor = TRUE;
 	}
 
-	// Ceate type hidden
+	// Create type hidden
 	$form['global']['type'] = array(
 		'#name' => 'type',
 		'#type' => 'hidden',
@@ -300,12 +309,19 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 
 function _jmcouillard_manager_form_add($form, &$form_state) {
 
+	global $managed;
+
 	if (isset($form_state['values'])) {
 		$type = $form_state["build_info"]["args"][0];
 		$name = $form_state["build_info"]["args"][1];
-
-		if($type=="node") drupal_goto("node/add/" . str_replace("_", "-", $name));
-		else if($type=="taxonomy_term") drupal_goto("admin/structure/taxonomy/" . $name . "/add");
+		$useForm = ($managed[$name]["form"] != "");
+		
+		if($useForm) {
+			drupal_goto("admin/content/manager/add/" . $name);
+		}else {
+			if($type=="node") drupal_goto("node/add/" . str_replace("_", "-", $name));
+			else if($type=="taxonomy_term") drupal_goto("admin/structure/taxonomy/" . $name . "/add");
+		}
 	};
 }
 

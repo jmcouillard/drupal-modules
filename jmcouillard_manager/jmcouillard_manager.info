@@ -4,5 +4,6 @@ package = jmcouillard
 core = 7.x
 php = 5.2
 dependencies[] = taxonomy
+dependencies[] = ctools
 configure = admin/config/administration/manager
 version = "7.x-0.1"

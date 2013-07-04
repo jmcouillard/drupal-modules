@@ -6,46 +6,63 @@ global $managed;
 
 function jmcouillard_manager_init() {
 
+	// if(!path_is_admin(current_path()))
+	// return;
+
 	global $managed;
 	$managed = array();
 
 	$jmcouillard_manager_content = array();
 	$jmcouillard_manager_content["node"] = variable_get('jmcouillard_manager_type', array());
-	$jmcouillard_manager_content["taxonomy_term"]  = variable_get('jmcouillard_manager_voc', array());
+	$jmcouillard_manager_content["taxonomy_term"] = variable_get('jmcouillard_manager_voc', array());
 	$jmcouillard_manager_subcategory_field = variable_get('jmcouillard_manager_subcategory_field', array());
 	$jmcouillard_manager_weight_field = variable_get('jmcouillard_manager_weight_field', array());
 	$jmcouillard_manager_image_field = variable_get('jmcouillard_manager_image_field', array());
 	$jmcouillard_manager_image_field_fallback = variable_get('jmcouillard_manager_image_field_fallback', array());
 
+	// Process each entry (nodes and taxonomy)
 	foreach ($jmcouillard_manager_content as $type => $content) {
 
 		foreach ($content as $name => $enabled) {
-		
+
 			if($enabled) {
 
 				// Check if content type has the specified weight field
-				$typeFields=field_info_instances($type, $name);			
-				$hasWeightField=isset($typeFields[$jmcouillard_manager_weight_field]) || $type == "taxonomy_term";
-				$hasFirstImageField=isset($typeFields[$jmcouillard_manager_image_field]);
-				$hasSubcategoryField=isset($typeFields[$jmcouillard_manager_subcategory_field]);
+				$typeFields = field_info_instances($type, $name);
+				$hasWeightField = isset($typeFields[$jmcouillard_manager_weight_field]) || $type == "taxonomy_term";
+				$hasFirstImageField = isset($typeFields[$jmcouillard_manager_image_field]);
+				$hasSubcategoryField = isset($typeFields[$jmcouillard_manager_subcategory_field]);
 
 				// Save type to global variable
-				$managed[$name] =  array(
-			     	"sortable" => $hasWeightField,
-		     		"subcategories" => $hasSubcategoryField,
-			     	"subcategoryField" => $jmcouillard_manager_subcategory_field,
+				$managed[$name] = array(
+					"sortable" => $hasWeightField,
+					"subcategories" => $hasSubcategoryField,
+					"subcategoryField" => $jmcouillard_manager_subcategory_field,
 					"deletable" => TRUE,
 					"type" => $type,
+					"form" => NULL,
 					"imageField" => $hasFirstImageField ? $jmcouillard_manager_image_field : $jmcouillard_manager_image_field_fallback,
-			   );
+				);
 
 				// Sorting exception
-			 	if($hasWeightField || $type == "taxonomy_term") {
-			 		$managed[$name]["order"] = "w.".$jmcouillard_manager_weight_field."_value ASC";
-			 	} 
+				if($hasWeightField || $type == "taxonomy_term") {
+					$managed[$name]["order"] = "w." . $jmcouillard_manager_weight_field . "_value ASC";
+				}
 			}
 		}
 	}
+
+	// Get forms listing
+	$modulePath = drupal_get_path("module", "jmcouillard_manager");
+	$forms = file_scan_directory($modulePath . "/custom_forms", '/.*\.inc$/');
+	foreach ($forms as $key => $formItem) {
+		$formId = $formItem->name;
+		$formFilename = $formItem->filename;
+		$name = $jmcouillard_manager_form = variable_get('jmcouillard_manager_form_' . $formId, NULL);
+		$managed[$name]["form"] = $formFilename;
+	}
+	
+	// dpm($managed);
 }
 
 /**
@@ -55,7 +72,7 @@ function jmcouillard_manager_block_info() {
 
 	$blocks['jmcouillard_manager_link'] = array(
 		'info' => t('Manager link'),
-		'cache' => DRUPAL_CACHE_GLOBAL		
+		'cache' => DRUPAL_CACHE_GLOBAL
 	);
 
 	return $blocks;
@@ -74,11 +91,11 @@ function jmcouillard_manager_block_view($delta = '') {
 
 	switch ($delta) {
 		case 'jmcouillard_manager_link' :
-	      if (user_access('jmcouillard manager')) {
+			if(user_access('jmcouillard manager')) {
 				$block['subject'] = '';
 				$block['content'] = array(
 					'#type' => 'markup',
-					'#markup' => '<div id="manager-link" style="position:fixed;top:100px;left:0px;"><a style="float:left;clear:left;" href="' . url("admin/content/manager", array('alias' => TRUE)) . '"><img src="' . $modulePath . '/jmcouillard-manager-link.png"/></a><a style="float:left;clear:left;" href="' . url("user/logout") . '"><img src="' . $modulePath . '/jmcouillard-manager-logout.png"/></a></div>',
+					'#markup' => '<div id="manager-link" style="position:fixed;top:100px;left:0px;z-index:100;"><a style="float:left;clear:left;" href="' . url("admin/content/manager", array('alias' => TRUE)) . '"><img src="' . $modulePath . '/jmcouillard-manager-link.png"/></a><a style="float:left;clear:left;" href="' . url("user/logout") . '"><img src="' . $modulePath . '/jmcouillard-manager-logout.png"/></a></div>',
 				);
 			};
 			break;
@@ -92,11 +109,13 @@ function jmcouillard_manager_block_view($delta = '') {
 function jmcouillard_manager_menu() {
 
 	global $managed;
-	if(!isset($managed)) $managed = array();
+	if(!isset($managed))
+		$managed = array();
 
 	$subcategoryVocabulary = variable_get('jmcouillard_manager_subcategory_vocabulary', -1);
+
 	if($subcategoryVocabulary != -1) {
-		$vid = taxonomy_vocabulary_machine_name_load($subcategoryVocabulary)->vid;
+		$vid =           taxonomy_vocabulary_machine_name_load($subcategoryVocabulary)->vid;
 		$subcategoryTerms = taxonomy_get_tree($vid);
 	}
 
@@ -107,14 +126,14 @@ function jmcouillard_manager_menu() {
 		'page arguments' => array('jmcouillard_manager_form'),
 		'type' => MENU_NORMAL_ITEM,
 		'access arguments' => array('jmcouillard manager'),
-    	'file' => 'jmcouillard_manager_form.inc',
+		'file' => 'jmcouillard_manager_form.inc',
 	);
 
 	// Create listing pages
 	foreach ($managed as $name => $data) {
-	
+
 		$items['admin/content/manager/' . $name] = array(
-			'title' => ($data["type"] == "node") ? node_type_load($name) -> name : taxonomy_vocabulary_machine_name_load($name)->name,
+			'title' => ($data["type"] == "node") ?           node_type_load($name)->name :           taxonomy_vocabulary_machine_name_load($name)->name,
 			'page callback' => 'drupal_get_form',
 			'page arguments' => array(
 				'jmcouillard_manager_form',
@@ -144,35 +163,69 @@ function jmcouillard_manager_menu() {
 			);
 
 			// Create subcategory
-			foreach ($subcategoryTerms as $key => $subcategory) {
+			if(isset($subcategoryTerms)) {
+				foreach ($subcategoryTerms as $key => $subcategory) {
 
-				$items['admin/content/manager/' . $name . '/' . $subcategory->tid] = array(
-					'title' => $subcategory -> name,
-					'page callback' => 'drupal_get_form',
-					'page arguments' => array(
-						'jmcouillard_manager_form',
-						$data["type"],
-						$name,
-						$subcategory->tid
-					),
-					'type' => MENU_LOCAL_TASK,
-					'access arguments' => array('jmcouillard manager'),
-					'file' => 'jmcouillard_manager_form.inc',
-					'tab_parent' => 'admin/content/manager/' . $name,
-				);
+					$items['admin/content/manager/' . $name . '/' . $subcategory->tid] = array(
+						'title' => $subcategory->name,
+						'page callback' => 'drupal_get_form',
+						'page arguments' => array(
+							'jmcouillard_manager_form',
+							$data["type"],
+							$name,
+							$subcategory->tid
+						),
+						'type' => MENU_LOCAL_TASK,
+						'access arguments' => array('jmcouillard manager'),
+						'file' => 'jmcouillard_manager_form.inc',
+						'tab_parent' => 'admin/content/manager/' . $name,
+					);
+				}
 			}
 		}
-	}
 
+		// Create custom forms
+		if($data["form"] != "") {
+
+			$type = $data["type"];
+			$filename = $data["form"];
+
+			$items['admin/content/manager/edit/' . $name . '/%'] = array(
+				'title' => 'Manage ' . $name,
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array(
+					'jmcouillard_manager_custom_form',
+					5
+				),
+				'type' => MENU_NORMAL_ITEM,
+				'access arguments' => array('jalo manager'),
+				'file' => 'custom_forms/'.$filename,
+			);
+			
+			$items['admin/content/manager/add/' . $name] = array(
+				'title' => 'Manage ' . $name,
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array(
+					'jmcouillard_manager_custom_form'
+				),
+				'type' => MENU_NORMAL_ITEM,
+				'access arguments' => array('jalo manager'),
+				'file' => 'custom_forms/'.$filename,
+			);
+			
+			drupal_set_message('admin/content/manager/edit/' . $type . '/%');
+		}
+
+	}
 	// Configuration page
 	$items['admin/config/administration/manager'] = array(
-	'title' => 'Manager configuration',
-	'description' => 'Configuration for Private nodes module',
-	'page callback' => 'drupal_get_form',
-	'page arguments' => array('jmcouillard_manager_config_form'),
-	'access arguments' => array('access administration pages'),
-	'file' => 'jmcouillard_manager_config_form.inc',
-	'type' => MENU_NORMAL_ITEM,
+		'title' => 'Manager configuration',
+		'description' => 'Configuration for Private nodes module',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('jmcouillard_manager_config_form'),
+		'access arguments' => array('access administration pages'),
+		'file' => 'jmcouillard_manager_config_form.inc',
+		'type' => MENU_NORMAL_ITEM,
 	);
 
 	return $items;
@@ -188,20 +241,11 @@ function jmcouillard_manager_permission() {
 		), );
 }
 
+/**
+ * Implementation of hook_theme().
+ */
 function jmcouillard_manager_theme() {
 	return array('jmcouillard_manager_table' => array('render element' => 'element'));
-}
-
-function _jmcouillard_manager_categories() {
-
-	$output = array();
-	$voc = taxonomy_get_tree(2);
-
-	foreach ($voc as $item) {
-		$output[$item -> tid] = $item -> name;
-	};
-
-	return $output;
 }
 
 /**
@@ -209,13 +253,43 @@ function _jmcouillard_manager_categories() {
  */
 function jmcouillard_manager_form_user_login_alter(&$form, &$form_state, $form_id) {
 	$status = variable_get('login_redirect_status', 0);
-	if ($status !== 0) {
+	if($status !== 0) {
 		$form['#submit'][] = 'jmcouillard_manager_user_login_submit';
 	}
 }
 
 function jmcouillard_manager_user_login_submit(&$form, &$form_state) {
 	//drupal_goto('admin/manager');
+}
+
+
+function _jmcouillard_manager_categories() {
+
+	$output = array();
+	$voc = taxonomy_get_tree(2);
+
+	foreach ($voc as $item) {
+		$output[$item->tid] = $item->name;
+	};
+
+	return $output;
+}
+
+
+function _jmcouillard_manager_attach_form($field_name, $entity_type, $bundle, $entity, &$form, &$form_state, $langcode = NULL) {
+  // Set #parents to 'top-level' if it doesn't exist.
+  $form += array('#parents' => array());
+
+  // If no language is provided use the default site language.
+  $options = array(
+    'language' => field_valid_language($langcode),
+    'default' => TRUE,
+  );
+
+  // Append
+  ctools_include('fields');
+  $field_instance = field_info_instance($entity_type, $field_name, $bundle);
+  $form += (array) ctools_field_invoke_field($field_instance, 'form', $entity_type, $entity, $form, $form_state, $options);
 }
 
 ?>
