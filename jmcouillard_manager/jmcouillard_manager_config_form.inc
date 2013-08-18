@@ -1,5 +1,6 @@
 <?php
 
+
 /**
  * Form function, called by drupal_get_form()
  * in the admin page.
@@ -7,7 +8,7 @@
 function jmcouillard_manager_config_form($form, &$form_state) {
 
 	// Get formatted content types
-	$types =      _node_types_build()->types;
+	$types =       _node_types_build()->types;
 	$processedTypes = array();
 	foreach ($types as $type)
 		$processedTypes[$type->type] = $type->name;
@@ -63,7 +64,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 		'#default_value' => variable_get('jmcouillard_manager_voc', array()),
 		'#options' => $processedVoc,
 		'#description' => t('Only the selected content type will be protected.'),
-		'#required' => TRUE,
+		'#required' => FALSE,
 	);
 
 	// Add weight field selection
@@ -165,7 +166,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 				'#type' => 'select',
 				'#title' => $formFilename,
 				'#default_value' => variable_get('jmcouillard_manager_form_' . $formId),
-				'#options' => $processedTypes,
+				'#options' => array_merge($processedTypes, $processedVoc),
 				'#description' => t('Associate a custom fom to a content type or taxonomy vocabulary.'),
 				'#empty_value' => -1,
 				'#required' => FALSE,

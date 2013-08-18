@@ -59,10 +59,12 @@ function jmcouillard_manager_init() {
 		$formId = $formItem->name;
 		$formFilename = $formItem->filename;
 		$name = $jmcouillard_manager_form = variable_get('jmcouillard_manager_form_' . $formId, NULL);
-		$managed[$name]["form"] = $formFilename;
+		if($name) {
+			$managed[$name]["form"] = $formFilename;
+		} else {
+			$managed["#custom"][] = $formFilename;
+		}
 	}
-	
-	// dpm($managed);
 }
 
 /**
@@ -115,7 +117,7 @@ function jmcouillard_manager_menu() {
 	$subcategoryVocabulary = variable_get('jmcouillard_manager_subcategory_vocabulary', -1);
 
 	if($subcategoryVocabulary != -1) {
-		$vid =           taxonomy_vocabulary_machine_name_load($subcategoryVocabulary)->vid;
+		$vid = (taxonomy_vocabulary_machine_name_load($subcategoryVocabulary)->vid);
 		$subcategoryTerms = taxonomy_get_tree($vid);
 	}
 
@@ -129,11 +131,30 @@ function jmcouillard_manager_menu() {
 		'file' => 'jmcouillard_manager_form.inc',
 	);
 
+	// Orphean custom forms
+	if(isset($managed["#custom"])) {
+
+		foreach ($managed["#custom"] as $filename) {
+			$explodedFilename = explode(".", $filename);
+			$simpleFilename = array_shift($explodedFilename);
+			$items['admin/content/manager/edit/' . $simpleFilename] = array(
+				'title' => ucfirst($simpleFilename),
+				'page callback' => 'drupal_get_form',
+				'page arguments' => array('jmcouillard_manager_custom_form'),
+				'type' => MENU_LOCAL_TASK,
+				'access arguments' => array('jmcouillard manager'),
+				'file' => 'custom_forms/' . $filename,
+			);
+		}
+
+		unset($managed["#custom"]);
+	}
+
 	// Create listing pages
 	foreach ($managed as $name => $data) {
 
 		$items['admin/content/manager/' . $name] = array(
-			'title' => ($data["type"] == "node") ?           node_type_load($name)->name :           taxonomy_vocabulary_machine_name_load($name)->name,
+			'title' => ($data["type"] == "node") ?                 node_type_load($name)->name :                 taxonomy_vocabulary_machine_name_load($name)->name,
 			'page callback' => 'drupal_get_form',
 			'page arguments' => array(
 				'jmcouillard_manager_form',
@@ -198,25 +219,21 @@ function jmcouillard_manager_menu() {
 					5
 				),
 				'type' => MENU_NORMAL_ITEM,
-				'access arguments' => array('jalo manager'),
-				'file' => 'custom_forms/'.$filename,
+				'access arguments' => array('jmcouillard manager'),
+				'file' => 'custom_forms/' . $filename,
 			);
-			
+
 			$items['admin/content/manager/add/' . $name] = array(
 				'title' => 'Manage ' . $name,
 				'page callback' => 'drupal_get_form',
-				'page arguments' => array(
-					'jmcouillard_manager_custom_form'
-				),
+				'page arguments' => array('jmcouillard_manager_custom_form'),
 				'type' => MENU_NORMAL_ITEM,
-				'access arguments' => array('jalo manager'),
-				'file' => 'custom_forms/'.$filename,
+				'access arguments' => array('jmcouillard manager'),
+				'file' => 'custom_forms/' . $filename,
 			);
-			
-			drupal_set_message('admin/content/manager/edit/' . $type . '/%');
 		}
-
 	}
+
 	// Configuration page
 	$items['admin/config/administration/manager'] = array(
 		'title' => 'Manager configuration',
@@ -227,6 +244,8 @@ function jmcouillard_manager_menu() {
 		'file' => 'jmcouillard_manager_config_form.inc',
 		'type' => MENU_NORMAL_ITEM,
 	);
+
+	// $items += module_invoke_all('manager_menu');
 
 	return $items;
 }
@@ -249,6 +268,13 @@ function jmcouillard_manager_theme() {
 }
 
 /**
+ * Implementation of hook_user_login().
+ */
+function jmcouillard_manager_user_login(&$edit, $account) {
+  $edit['redirect'] = 'admin/content/manager';
+}
+
+/**
  * Sets shutdown function to perform redirects later.
  */
 function jmcouillard_manager_form_user_login_alter(&$form, &$form_state, $form_id) {
@@ -257,11 +283,6 @@ function jmcouillard_manager_form_user_login_alter(&$form, &$form_state, $form_i
 		$form['#submit'][] = 'jmcouillard_manager_user_login_submit';
 	}
 }
-
-function jmcouillard_manager_user_login_submit(&$form, &$form_state) {
-	//drupal_goto('admin/manager');
-}
-
 
 function _jmcouillard_manager_categories() {
 
@@ -276,20 +297,73 @@ function _jmcouillard_manager_categories() {
 }
 
 
+/**
+ * Used by custom forms.
+ */
 function _jmcouillard_manager_attach_form($field_name, $entity_type, $bundle, $entity, &$form, &$form_state, $langcode = NULL) {
-  // Set #parents to 'top-level' if it doesn't exist.
-  $form += array('#parents' => array());
+	// Set #parents to 'top-level' if it doesn't exist.
+	$form += array('#parents' => array());
 
-  // If no language is provided use the default site language.
-  $options = array(
-    'language' => field_valid_language($langcode),
-    'default' => TRUE,
-  );
+	// If no language is provided use the default site language.
+	$options = array(
+		'language' => field_valid_language($langcode),
+		'default' => TRUE,
+	);
 
-  // Append
-  ctools_include('fields');
-  $field_instance = field_info_instance($entity_type, $field_name, $bundle);
-  $form += (array) ctools_field_invoke_field($field_instance, 'form', $entity_type, $entity, $form, $form_state, $options);
+	// Append
+	ctools_include('fields');
+	$field_instance = field_info_instance($entity_type, $field_name, $bundle);
+	$form += (array) ctools_field_invoke_field($field_instance, 'form', $entity_type, $entity, $form, $form_state, $options);
 }
 
+
+/**
+ * Used by custom forms.
+ */
+function _jmcouillard_manager_clean_up_field(&$field, $languages = array(LANGUAGE_NONE)) {
+
+	foreach ($languages as $lang) {
+		if(!isset($field[$lang])) {
+			// Handle empty fields
+			$field = NULL;
+		} else if(isset($field[$lang]["value"]) && $field[$lang]["value"] == "") {
+			// Handle empty translated fields
+			$field = NULL;
+		} else {
+			// Handle empty multiple items fields
+			foreach ($field[$lang] as $key => $item) {
+				if(isset($item["fid"]) && $item["fid"] <= 0) {
+					$field[$lang][$key] = NULL;
+					unset($field[$lang][$key]);
+				} else if(isset($field[$lang][0]["value"]) && $field[$lang][0]["value"] == "") {
+					$field[$lang][$key] = NULL;
+					unset($field[$lang][$key]);
+				} else if(isset($item["value"]) && $item["value"] == "") {
+					$field[$lang][$key] = NULL;
+					unset($field[$lang][$key]);
+				} else if(!is_array($item)) {
+					$field[$lang][$key] = NULL;
+					unset($field[$lang][$key]);
+				}
+			}
+			usort($field[$lang], '_jmcouillard_manager_sort_objects_by_weight');
+		}
+	}
+
+	return $field;
+}
+
+
+/**
+ * Used by custom forms.
+ */
+function _jmcouillard_manager_sort_objects_by_weight($a, $b) {
+
+	// Check if array
+	if(!isset($a["_weight"]) || !isset($b["_weight"])) return 0;
+
+	// Compare and return
+	if($a["_weight"] == $b["_weight"]) return 0;
+	else return ($a["_weight"] < $b["_weight"]) ? -1 : 1;
+}
 ?>

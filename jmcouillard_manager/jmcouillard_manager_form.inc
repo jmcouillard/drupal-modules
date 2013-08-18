@@ -18,8 +18,8 @@ function jmcouillard_manager_form_submit($form, &$form_state) {
 			if($item['type'] == "node") {
 
 				$node = node_load($id);
-				$node -> title = $item['title'];
-				$node -> {$weightField}['und'][0]['value'] = $item['weight'];
+				if(isset($item['title'])) $node->title = $item['title'];
+				$node->{$weightField}['und'][0]['value'] = $item['weight'];
 
 				node_save($node);
 
@@ -27,8 +27,8 @@ function jmcouillard_manager_form_submit($form, &$form_state) {
 			} else if($item['type'] == "taxonomy_term") {
 
 				$term = taxonomy_term_load($id);
-				$term -> name =  $item['title'];
-				$term -> weight =  $item['weight'];
+				if(isset($item['title'])) $term->name = $item['title'];
+				$term->weight = $item['weight'];
 
 				taxonomy_term_save($term);
 			}
@@ -129,9 +129,9 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 
 	// Set default name if not defined
 	if(!isset($name)) {
-		$name = array_shift(array_keys($managed));
-		$type = array_shift(array_values($managed));
-		$type = $type["type"];
+		$keys = array_keys($managed);
+		$name = array_shift($keys);
+		drupal_goto('admin/content/manager/' . $name);
 	}
 
 	// Define dynamic fields
@@ -211,9 +211,9 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		
 		// Edit link
 		if(!$useForm) {
-			$data['edit_link'] = l(t('edit'), $baseLinkPath . $entityId . '/edit', array('query' => array('destination' => '/admin/content/manager/' . $name)));
+			$data['edit_link'] = l(t('edit'), $baseLinkPath . $entityId . '/edit', array('query' => array('destination' => 'admin/content/manager/' . $name)));
 		} else {
-			$data['edit_link'] = l(t('edit'), "admin/content/manager/edit/" . $name. "/" . $entityId . '/edit', array('query' => array('destination' => '/admin/content/manager/' . $name)));			
+			$data['edit_link'] = l(t('edit'), "admin/content/manager/edit/" . $name. "/" . $entityId . '/edit', array('query' => array('destination' => 'admin/content/manager/' . $name)));			
 		}
 		
 		// Delete link
@@ -302,7 +302,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	);
 
 	// Update title
-	drupal_set_title("Manage " . $name); 
+	drupal_set_title("Manage " . str_replace("_", " ", $name)); 
 
 	return $form;
 }
