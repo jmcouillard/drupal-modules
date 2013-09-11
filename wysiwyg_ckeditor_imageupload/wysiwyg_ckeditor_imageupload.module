@@ -8,21 +8,22 @@ function wysiwyg_ckeditor_imageupload_menu() {
 	$items = array();
 
 	$items['admin/config/content/wysiwyg/ckeditor_imageupload'] = array(
-		'title' => 'File upload',
+		'title' => 'WYSIWYG image uploader configuration',
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('wysiwyg_ckeditor_imageupload_config_form'),
 		'access arguments' => array('access administration pages'),
 		'file' => 'wysiwyg_ckeditor_imageupload_config_form.inc',
 		'type' => MENU_CALLBACK,
-		);
+	);
 
 	$items['wysiwyg/ckeditor/imageupload'] = array(
 		'title' => 'File upload',
 		'page callback' => '_wysiwyg_ckeditor_imageupload',
 		'page arguments' => array(),
-		'access callback' => array("wysiwyg ckeditor imageupload"),
+		'access arguments' => array("wysiwyg ckeditor imageupload"),
+		'access callback' => TRUE,
 		'type' => MENU_CALLBACK,
-		);
+	);
 
 	return $items;
 }
@@ -56,7 +57,9 @@ function wysiwyg_ckeditor_imageupload_wysiwyg_editor_settings_alter(&$settings, 
 
 function _wysiwyg_ckeditor_imageupload() {
 
-	$folder = "wysiwyg_ckeditor_imageupload/";
+	global $user;
+
+	$folder = "wysiwyg_ckeditor_imageupload/" . $user->name . "/";
 	$folderFullPath = drupal_realpath(file_default_scheme() . '://') . "/" . $folder;
 
 	$callback = $_GET["CKEditorFuncNum"];
@@ -65,7 +68,7 @@ function _wysiwyg_ckeditor_imageupload() {
 
 	$tmpPath = $_FILES['upload']['tmp_name'];
 	$filename = $_FILES['upload']['name'];
-	$destPath = $folderFullPath . "/" . $filename;
+	$destPath = $folderFullPath  . "/" . $filename;
 
   	// Validate the output folder
 	if (!file_exists($folderFullPath)) {
@@ -80,7 +83,6 @@ function _wysiwyg_ckeditor_imageupload() {
 
 	} else if(move_uploaded_file($tmpPath, $destPath)) {
 
-		global $user;
 		$uri = 'public://'.$folder.$filename;
 
 		$file = new stdClass;
