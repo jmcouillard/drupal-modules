@@ -5,26 +5,26 @@
  */
 function wysiwyg_ckeditor_imageupload_menu() {
 
-  $items = array();
-  
-  $items['admin/config/content/wysiwyg/ckeditor_imageupload'] = array(
-    'title' => 'File upload',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('wysiwyg_ckeditor_imageupload_config_form'),
-    'access arguments' => array('access administration pages'),
-    'file' => 'wysiwyg_ckeditor_imageupload_config_form.inc',
-    'type' => MENU_CALLBACK,
-  );
+	$items = array();
 
-  $items['wysiwyg/ckeditor/imageupload'] = array(
-    'title' => 'File upload',
-    'page callback' => '_wysiwyg_ckeditor_imageupload',
-    'page arguments' => array(),
-    'access callback' => array("wysiwyg ckeditor imageupload"),
-    'type' => MENU_CALLBACK,
-  );
-  
-  return $items;
+	$items['admin/config/content/wysiwyg/ckeditor_imageupload'] = array(
+		'title' => 'File upload',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('wysiwyg_ckeditor_imageupload_config_form'),
+		'access arguments' => array('access administration pages'),
+		'file' => 'wysiwyg_ckeditor_imageupload_config_form.inc',
+		'type' => MENU_CALLBACK,
+		);
+
+	$items['wysiwyg/ckeditor/imageupload'] = array(
+		'title' => 'File upload',
+		'page callback' => '_wysiwyg_ckeditor_imageupload',
+		'page arguments' => array(),
+		'access callback' => array("wysiwyg ckeditor imageupload"),
+		'type' => MENU_CALLBACK,
+		);
+
+	return $items;
 }
 
 
@@ -32,10 +32,10 @@ function wysiwyg_ckeditor_imageupload_menu() {
  * Implementation of hook_permission().
  */
 function wysiwyg_ckeditor_imageupload_permission() {
-  return array('wysiwyg ckeditor imageupload' => array(
-      'title' => t('Upload files with CKEditor'),
-      'description' => t('Allow the upload of images using CKEditor.'),
-    ), );
+	return array('wysiwyg ckeditor imageupload' => array(
+		'title' => t('Upload files with CKEditor'),
+		'description' => t('Allow the upload of images using CKEditor.'),
+		), );
 }
 
 
@@ -44,63 +44,68 @@ function wysiwyg_ckeditor_imageupload_permission() {
  */
 function wysiwyg_ckeditor_imageupload_wysiwyg_editor_settings_alter(&$settings, $context) {
 
-  if(variable_get('wysiwyg_ckeditor_imageupload_disable_advanced', FALSE)) $settings['removeDialogTabs'] = 'image:advanced';
-  $settings['filebrowserUploadUrl'] = '/wysiwyg/ckeditor/imageupload';
+	if($context["editor"]["name"] == "ckeditor") {
+		if(variable_get('wysiwyg_ckeditor_imageupload_disable_advanced', FALSE)) {
+			$settings['removeDialogTabs'] = 'image:advanced';
+		}
+
+		$settings['filebrowserUploadUrl'] = '/wysiwyg/ckeditor/imageupload';
+	}
 }
 
 
 function _wysiwyg_ckeditor_imageupload() {
 
-  $folder = "wysiwyg_ckeditor_imageupload/";
-  $folderFullPath = drupal_realpath(file_default_scheme() . '://') . "/" . $folder;
-    
-  $callback = $_GET["CKEditorFuncNum"];
-  $msg =  FALSE;
-  $url =  FALSE;
- 
-  $tmpPath = $_FILES['upload']['tmp_name'];
-  $filename = $_FILES['upload']['name'];
-  $destPath = $folderFullPath . "/" . $filename;
+	$folder = "wysiwyg_ckeditor_imageupload/";
+	$folderFullPath = drupal_realpath(file_default_scheme() . '://') . "/" . $folder;
 
-  // Validate the output folder
-  if (!file_exists($folderFullPath)) {
-    mkdir($folderFullPath, 0777, true);
-  }
+	$callback = $_GET["CKEditorFuncNum"];
+	$msg =  FALSE;
+	$url =  FALSE;
 
-  // Validate that file is image
-  $imageData = @getimagesize($tmpPath);
-  if($imageData === FALSE || !($imageData[2] == IMAGETYPE_GIF || $imageData[2] == IMAGETYPE_JPEG || $imageData[2] == IMAGETYPE_PNG)) {
-    
-    $msg = t("File is not a valid image.", array(), array("context"=>"wysiwyg_ckeditor_imageupload"));
+	$tmpPath = $_FILES['upload']['tmp_name'];
+	$filename = $_FILES['upload']['name'];
+	$destPath = $folderFullPath . "/" . $filename;
 
-  } else if(move_uploaded_file($tmpPath, $destPath)) {
+  	// Validate the output folder
+	if (!file_exists($folderFullPath)) {
+		mkdir($folderFullPath, 0777, true);
+	}
 
-    global $user;
-    $uri = 'public://'.$folder.$filename;
+  	// Validate that file is image
+	$imageData = @getimagesize($tmpPath);
+	if($imageData === FALSE || !($imageData[2] == IMAGETYPE_GIF || $imageData[2] == IMAGETYPE_JPEG || $imageData[2] == IMAGETYPE_PNG)) {
 
-    $file = new stdClass;
-    $file->uid = $user->uid;
-    $file->filename = $filename;
-    $file->uri = $uri;
-    $file->filemime = 'text/plain';
-    $file->filesize = filesize($uri);
-    $file->status = 1;
+		$msg = t("File is not a valid image.", array(), array("context"=>"wysiwyg_ckeditor_imageupload"));
 
-    file_save($file);
+	} else if(move_uploaded_file($tmpPath, $destPath)) {
 
-    $url =  file_create_url($file->uri);
+		global $user;
+		$uri = 'public://'.$folder.$filename;
 
-  } else {
+		$file = new stdClass;
+		$file->uid = $user->uid;
+		$file->filename = $filename;
+		$file->uri = $uri;
+		$file->filemime = 'text/plain';
+		$file->filesize = filesize($uri);
+		$file->status = 1;
 
-    $msg = t("Upload could not be completed.", array(), array("context"=>"wysiwyg_ckeditor_imageupload"));
-  }
+		file_save($file);
 
-  // Output
-  print '<html><body><script type="text/javascript">';
-  print 'window.parent.CKEDITOR.tools.callFunction('.$callback.', "'.$url.'","'.$msg.'");';
-  print '</script>';
-  print '</body></html>';
+		$url =  file_create_url($file->uri);
 
-  exit;
+	} else {
+
+		$msg = t("Upload could not be completed.", array(), array("context"=>"wysiwyg_ckeditor_imageupload"));
+	}
+
+  	// Output
+	print '<html><body><script type="text/javascript">';
+	print 'window.parent.CKEDITOR.tools.callFunction('.$callback.', "'.$url.'","'.$msg.'");';
+	print '</script>';
+	print '</body></html>';
+
+	exit;
 
 }

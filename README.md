@@ -14,3 +14,7 @@ A field formatteur that convert any text field contaning a vimeo url (https://vi
 ## simple_custom_frontpage
 
 This is a skeleton that can be used to build a custom front page from node and views. This module will not work out of the box : it is an example module that should be customize depending on your needs.
+
+## wysiwyg_ckeditor_imageupload
+
+Add the ability to upload images from CKEditor. Requires [WYSIWYG](https://drupal.org/project/wysiwyg) module.
