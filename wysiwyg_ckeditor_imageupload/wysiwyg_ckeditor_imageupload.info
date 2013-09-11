@@ -1,0 +1,7 @@
+; $Id$
+name = Wysiwyg CKEditor Image Upload
+description = Image upload plugin for CKEditor
+package = User interface
+core = 7.x
+dependencies[] = wysiwyg
+configure = admin/config/content/wysiwyg/ckeditor_imageupload

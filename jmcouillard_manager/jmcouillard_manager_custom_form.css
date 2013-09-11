@@ -1,0 +1,12 @@
+#jmcouillard-manager-custom-form .lang-odd {
+	vertical-align: top;
+	margin-right:2%;
+	display:inline-block;
+	width:49%;
+}
+
+#jmcouillard-manager-custom-form .lang-even {
+	vertical-align: top;
+	display:inline-block;
+	width:49%;
+}
