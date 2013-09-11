@@ -87,7 +87,7 @@ function _wysiwyg_ckeditor_imageupload() {
 		$file->uid = $user->uid;
 		$file->filename = $filename;
 		$file->uri = $uri;
-		$file->filemime = 'text/plain';
+		$file->filemime = $imageData["mime"];
 		$file->filesize = filesize($uri);
 		$file->status = 1;
 
