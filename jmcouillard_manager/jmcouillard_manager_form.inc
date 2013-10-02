@@ -250,7 +250,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		if (isset($entity -> {$imageField}["und"])) {
 			$data['img_url'] = image_style_url($thumbImageStyle, $entity -> {$imageField}["und"][0]["uri"]);
 		} else {
-			$data['img_url'] = $modulePath . "/jmcouillard_manager_default.png";
+			$data['img_url'] = $modulePath . "/images/jmcouillard_manager_default.png";
 		}
 
 		// Define image url

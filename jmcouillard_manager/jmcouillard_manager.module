@@ -106,7 +106,7 @@ function jmcouillard_manager_block_view($delta = '') {
 				$block['subject'] = '';
 				$block['content'] = array(
 					'#type' => 'markup',
-					'#markup' => '<div id="manager-link" style="position:fixed;top:100px;left:0px;z-index:100;"><a style="float:left;clear:left;" href="' . url("admin/content/manager", array('alias' => TRUE)) . '"><img src="' . $modulePath . '/jmcouillard-manager-link.png"/></a><a style="float:left;clear:left;" href="' . url("user/logout") . '"><img src="' . $modulePath . '/jmcouillard-manager-logout.png"/></a></div>',
+					'#markup' => '<div id="manager-link" style="position:fixed;top:100px;left:0px;z-index:100;"><a style="float:left;clear:left;" href="' . url("admin/content/manager", array('alias' => TRUE)) . '"><img src="' . $modulePath . '/images/jmcouillard-manager-link.png"/></a><a style="float:left;clear:left;" href="' . url("user/logout") . '"><img src="' . $modulePath . '/images/jmcouillard-manager-logout.png"/></a></div>',
 				);
 			};
 			break;
