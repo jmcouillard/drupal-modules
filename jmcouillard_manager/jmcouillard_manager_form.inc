@@ -51,8 +51,7 @@ function theme_jmcouillard_manager_table($vars) {
 	$form = $vars['element'];
 	$rows = array();
 	$attributes = array('id' => array('jmcouillard_manager_form_table'));
-	$type = $form["global"]["type"]["#value"];
-	// $type = isset($types[$type]) ? $type : "front_slider";
+	$name = $form["global"]["type"]["#value"];
 	$output = '';
 
 	// Render variable form children first
@@ -65,18 +64,29 @@ function theme_jmcouillard_manager_table($vars) {
 	$header = array(
 		t('Preview'),
 		t('Title'),
-		t('Edit')
 	);
 
+	// Extra colums header 
+	if ($managed[$name]["extraColumns"]) {
+		foreach ($managed[$name]["extraColumns"] as $extra) { 			
+			$header[] = $form["#extra_data"]["extraColumns"][$extra]["label"];
+		}
+	}
+
+	// Edit header colums header 
+	$header[] = t('Edit');
+
 	// Deletable table header
-	if ($managed[$type]["deletable"]) {
+	if ($managed[$name]["deletable"]) {
 		$header[] = t('Delete');
 	}
 
 	// Sortable table header
-	if ($managed[$type]["sortable"]) {
+	if ($managed[$name]["sortable"]) {
 		$header[] = t('Weight');
 	}
+
+	// dpm($managed);
 
 	// For each item form element
 	foreach (element_children($form['items']) as $key) {
@@ -88,19 +98,32 @@ function theme_jmcouillard_manager_table($vars) {
 		$rows[$key] = array('data' => array(
 				array('data' => $element['title']["#extra_data"]['img']),
 				array('data' => $element['title']),
-				array('data' => $element['title']["#extra_data"]['edit_link']),
+				// array('data' => $element['title']["#extra_data"]['edit_link']),
 			), );
 
+
+		// Extra colums
+		if ($managed[$name]["extraColumns"]) {
+			foreach ($managed[$name]["extraColumns"] as $extra) {
+				$rows[$key]["data"][] = array('data' =>  $element[$extra]["#markup"]);
+			}
+		}
+
+		// Edit field
+		$rows[$key]["data"][] = array('data' => $element['title']["#extra_data"]['edit_link']);
+
 		// Deletable field
-		if ($managed[$type]["deletable"]) {
+		if ($managed[$name]["deletable"]) {
 			$rows[$key]["data"][] = array('data' => $element['title']["#extra_data"]['delete_link']);
 		}
 
 		// Sortable field
-		if ($managed[$type]["sortable"]) {
+		if ($managed[$name]["sortable"]) {
 			$rows[$key]["data"][] = array('data' => $element['weight']);
 			$rows[$key]['class'] = array('draggable');
 		}
+
+
 	}
 
 	// Render table
@@ -116,7 +139,7 @@ function theme_jmcouillard_manager_table($vars) {
 	$output .= drupal_render_children($form);
 
 	// Add drag js
-	if ($managed[$type]["sortable"])
+	if ($managed[$name]["sortable"])
 		drupal_add_tabledrag('jmcouillard_manager_form_table', 'order', 'sibling', 'retouche-manager-weight');
 
 	// Render and return
@@ -131,7 +154,9 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	if(!isset($name)) {
 		$keys = array_keys($managed);
 		$name = array_shift($keys);
-		drupal_goto('admin/content/manager/' . $name);
+		$default = variable_get('jmcouillard_manager_default', $name );
+
+		drupal_goto('admin/content/manager/' . $default);
 	}
 
 	// Define dynamic fields
@@ -165,6 +190,8 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		$voc = taxonomy_vocabulary_machine_name_load($name);
 		$results = db_query("SELECT * FROM {taxonomy_term_data} AS t WHERE t.vid=:vid ORDER BY t.weight", array(':vid' => $voc->vid));
 	}
+
+	$count = $results->rowCount();
 
 	while ($row = $results -> fetch()) {
 
@@ -211,13 +238,13 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		
 		// Edit link
 		if(!$useForm) {
-			$data['edit_link'] = l(t('edit'), $baseLinkPath . $entityId . '/edit', array('query' => array('destination' => 'admin/content/manager/' . $name)));
+			$data['edit_link'] = l(t('edit'), $baseLinkPath . $entityId . '/edit', array('query' => array('destination' => current_path())));
 		} else {
-			$data['edit_link'] = l(t('edit'), "admin/content/manager/edit/" . $name. "/" . $entityId . '/edit', array('query' => array('destination' => 'admin/content/manager/' . $name)));			
+			$data['edit_link'] = l(t('edit'), "admin/content/manager/edit/" . $name. "/" . $entityId . '/edit', array('query' => array('destination' => current_path())));			
 		}
 		
 		// Delete link
-		$data['delete_link'] = l(t('delete'),  $baseLinkPath . $entityId . '/delete', array('query' => array('destination' => '/admin/content/manager/' . $name)));
+		$data['delete_link'] = l(t('delete'),  $baseLinkPath . $entityId . '/delete', array('query' => array('destination' => current_path())));
 
 		// Define image url (for thumbnail)
 		if (isset($entity -> {$imageField}["und"])) {
@@ -239,7 +266,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		$field_weight = array( 
 			'#type' => 'weight',
 			'#default_value' => $data['weight'],
-			'#delta' => 50,
+			'#delta' => $count,
 			'#attributes' => array('class' => array('retouche-manager-weight')),
 			'#extra_data' => $data,
 		);
@@ -261,8 +288,27 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 			"type" => $field_type
 		);
 
+		// Extra colums
+		if (isset($managed[$name]["extraColumns"])) {
+			foreach ($managed[$name]["extraColumns"] as $extra) {
+				$form['items'][$data['nid']][$extra] = array(
+					'#type' => 'markup',
+					'#markup' => field_view_field($type, $entity, $extra, array("label"=>"hidden")),
+					// '#extra_data' => field_view_field($type, $entity, $extra, array("label"=>"hidden")),
+				);
+			}
+		}
+
 		unset($row);
 	};
+
+	// Create extra columns data
+	if (isset($managed[$name]["extraColumns"])) {
+		foreach ($managed[$name]["extraColumns"] as $extra) {
+			$infos = field_info_instance($type, $extra, $name);
+			$form['#extra_data']['extraColumns'][$extra] = $infos;
+		}
+	}
 
 	// Create textfield text area
 	if (isset($managed[$name]["variable"])) {

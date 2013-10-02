@@ -19,6 +19,7 @@ function jmcouillard_manager_init() {
 	$jmcouillard_manager_weight_field = variable_get('jmcouillard_manager_weight_field', array());
 	$jmcouillard_manager_image_field = variable_get('jmcouillard_manager_image_field', array());
 	$jmcouillard_manager_image_field_fallback = variable_get('jmcouillard_manager_image_field_fallback', array());
+	$jmcouillard_manager_extra_columns = variable_get('jmcouillard_manager_extra_columns', array());
 
 	// Process each entry (nodes and taxonomy)
 	foreach ($jmcouillard_manager_content as $type => $content) {
@@ -41,8 +42,16 @@ function jmcouillard_manager_init() {
 					"deletable" => TRUE,
 					"type" => $type,
 					"form" => NULL,
+					"extraColumns" => array(),
 					"imageField" => $hasFirstImageField ? $jmcouillard_manager_image_field : $jmcouillard_manager_image_field_fallback,
 				);
+
+				// Extra columns
+				foreach ($jmcouillard_manager_extra_columns as $extraFieldName => $value) {
+					if(strcmp($extraFieldName, $value) == 0 &&  isset($typeFields[$value])) {
+						$managed[$name]["extraColumns"][] =  $value;
+					}
+				}
 
 				// Sorting exception
 				if($hasWeightField || $type == "taxonomy_term") {
@@ -58,8 +67,8 @@ function jmcouillard_manager_init() {
 	foreach ($forms as $key => $formItem) {
 		$formId = $formItem->name;
 		$formFilename = $formItem->filename;
-		$name = $jmcouillard_manager_form = variable_get('jmcouillard_manager_form_' . $formId, NULL);
-		if($name) {
+		$name = variable_get('jmcouillard_manager_form_' . $formId, NULL);
+		if(!is_null($name) && $name!=-1) {
 			$managed[$name]["form"] = $formFilename;
 		} else {
 			$managed["#custom"][] = $formFilename;
@@ -111,8 +120,7 @@ function jmcouillard_manager_block_view($delta = '') {
 function jmcouillard_manager_menu() {
 
 	global $managed;
-	if(!isset($managed))
-		$managed = array();
+	if(!isset($managed)) $managed = array();
 
 	$subcategoryVocabulary = variable_get('jmcouillard_manager_subcategory_vocabulary', -1);
 
@@ -216,6 +224,7 @@ function jmcouillard_manager_menu() {
 				'page callback' => 'drupal_get_form',
 				'page arguments' => array(
 					'jmcouillard_manager_custom_form',
+					4,
 					5
 				),
 				'type' => MENU_NORMAL_ITEM,
@@ -226,7 +235,10 @@ function jmcouillard_manager_menu() {
 			$items['admin/content/manager/add/' . $name] = array(
 				'title' => 'Manage ' . $name,
 				'page callback' => 'drupal_get_form',
-				'page arguments' => array('jmcouillard_manager_custom_form'),
+				'page arguments' => array(
+					'jmcouillard_manager_custom_form',
+					4
+				),
 				'type' => MENU_NORMAL_ITEM,
 				'access arguments' => array('jmcouillard manager'),
 				'file' => 'custom_forms/' . $filename,
@@ -296,7 +308,6 @@ function _jmcouillard_manager_categories() {
 	return $output;
 }
 
-
 /**
  * Used by custom forms.
  */
@@ -352,7 +363,6 @@ function _jmcouillard_manager_clean_up_field(&$field, $languages = array(LANGUAG
 
 	return $field;
 }
-
 
 /**
  * Used by custom forms.

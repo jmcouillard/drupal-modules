@@ -8,10 +8,16 @@
 function jmcouillard_manager_config_form($form, &$form_state) {
 
 	// Get formatted content types
-	$types =       _node_types_build()->types;
+	$types =  _node_types_build()->types;
 	$processedTypes = array();
 	foreach ($types as $type)
 		$processedTypes[$type->type] = $type->name;
+
+	// Get all fields
+	$allFields = field_read_fields();
+	$processedAllFields = array();
+	foreach ($allFields as $key => $field)
+		$processedAllFields[$key] = $field['field_name'];	
 
 	// Get integer fields
 	$intFields = field_read_fields(array('type' => "number_integer"));
@@ -57,15 +63,17 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 		'#required' => TRUE,
 	);
 
-	// Add vocabularies selection
-	$form['jmcouillard_manager_voc'] = array(
-		'#type' => 'checkboxes',
-		'#title' => t('Managed vocabularies'),
-		'#default_value' => variable_get('jmcouillard_manager_voc', array()),
-		'#options' => $processedVoc,
-		'#description' => t('Only the selected content type will be protected.'),
-		'#required' => FALSE,
-	);
+	if(count($voc) > 0) {
+		// Add vocabularies selection
+		$form['jmcouillard_manager_voc'] = array(
+			'#type' => 'checkboxes',
+			'#title' => t('Managed vocabularies'),
+			'#default_value' => variable_get('jmcouillard_manager_voc', array()),
+			'#options' => $processedVoc,
+			'#description' => t('Only the selected content type will be protected.'),
+			'#required' => FALSE,
+		);
+	}
 
 	// Add weight field selection
 	$form['jmcouillard_manager_weight_field'] = array(
@@ -77,6 +85,15 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 		'#required' => TRUE,
 	);
 
+	// Add thumbnail style selection
+	$form['jmcouillard_manager_default'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Default page'),
+		'#default_value' => variable_get('jmcouillard_manager_default'),
+		'#description' => t('Default path to go when not specified.'),
+		'#required' => FALSE,
+	);
+	
 	// Add image fieldset
 	$form['jmcouillard_manager_image'] = array(
 		'#type' => 'fieldset',
@@ -93,6 +110,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 		'#description' => t('Field used to display thumbnail. Must be an image field.'),
 		'#required' => TRUE,
 	);
+	
 	// Add image field selection
 	$form['jmcouillard_manager_image']['jmcouillard_manager_image_field_fallback'] = array(
 		'#type' => 'radios',
@@ -173,6 +191,27 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 			);
 		}
 	}
+
+
+	// Add extra_columns fieldset
+	$form['jmcouillard_manager_extra_columns'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Extra columns'),
+		'#description' => t('Slected fields will be shown in the table when availalable.'),
+		'#collapsible' => TRUE,
+		'#collapsed' => TRUE,
+	);
+
+	// Add extra_columns field selection
+	$form['jmcouillard_manager_extra_columns']['jmcouillard_manager_extra_columns'] = array(
+		'#type' => 'checkboxes',
+		'#title' => t('Extra columns'),
+		'#default_value' => variable_get('jmcouillard_manager_extra_columns'),
+		'#options' => $processedAllFields,
+		'#description' => t('The module will look into this field to filter the nodes by subcategories.'),
+		'#empty_value' => -1,
+		'#required' => FALSE,
+	);
 
 	return system_settings_form($form);
 }
