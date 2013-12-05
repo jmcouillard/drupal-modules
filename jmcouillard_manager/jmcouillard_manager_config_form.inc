@@ -90,7 +90,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 		'#type' => 'textfield',
 		'#title' => t('Default page'),
 		'#default_value' => variable_get('jmcouillard_manager_default'),
-		'#description' => t('Default path to go when not specified.'),
+		'#description' => t('Default path to go when not specified (admin/content/manager/ will be prepended'),
 		'#required' => FALSE,
 	);
 	
