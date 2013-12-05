@@ -289,12 +289,12 @@ function jmcouillard_manager_user_login(&$edit, $account) {
 /**
  * Sets shutdown function to perform redirects later.
  */
-function jmcouillard_manager_form_user_login_alter(&$form, &$form_state, $form_id) {
-	$status = variable_get('login_redirect_status', 0);
-	if($status !== 0) {
-		$form['#submit'][] = 'jmcouillard_manager_user_login_submit';
-	}
-}
+// function jmcouillard_manager_form_user_login_alter(&$form, &$form_state, $form_id) {
+// 	$status = variable_get('login_redirect_status', 0);
+// 	if($status !== 0) {
+// 		$form['#submit'][] = 'jmcouillard_manager_user_login_submit';
+// 	}
+// }
 
 function _jmcouillard_manager_categories() {
 
