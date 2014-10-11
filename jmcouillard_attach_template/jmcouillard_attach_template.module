@@ -1,0 +1,92 @@
+<?php
+
+require_once 'jmcouillard_attach_template.node.inc';
+
+/**
+ * Implementation of hook_menu().
+ */
+function jmcouillard_attach_template_menu() {
+
+	// Configuration page
+	$items['admin/config/administration/attach_template'] = array(
+		'title' => 'Attach template configuration',
+		'description' => 'Configuration',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('jmcouillard_attach_template_config_form'),
+		'access arguments' => array('access administration pages'),
+		'file' => 'jmcouillard_attach_template_config_form.inc',
+		'type' => MENU_NORMAL_ITEM,
+	);
+
+	return $items;
+}
+/**
+ * Implementation of hook_theme.
+ */
+function jmcouillard_attach_template_theme() {
+
+	$themes = array();
+	$list = _jmcouillard_attach_template_get_template_list();
+
+	foreach ($list as $template => $human_name) {
+		$themes['jmcouillard_attach_template_'.$template] = array(
+			'template' => 'templates/' . $template,
+			'variables' => array('data' => array()),
+		);
+	}
+	
+	return $themes;
+}
+
+/**
+ * Implementation of hook_permission.
+ */
+function jmcouillard_attach_template_permission() {
+  return array(
+    'administer attached template' => array(
+      'title' => t('Administer attached template'),
+      'description' => t('If allowed, form fields will be added in the node edit/add form.'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_preprocess_page
+ */
+function jmcouillard_attach_template_preprocess_page(&$variables) {
+
+	global $language;
+
+	// Only for nodes
+	if(isset($variables['node'])) {
+
+		// Define node
+		$node = $variables['node'];
+		$title = field_get_items("node", $node, "field_title");
+		$subtitle = field_get_items("node", $node, "field_subtitle");
+
+		// Set title
+		if(isset($title[0])) {
+			drupal_set_title($title[0]["value"]);
+		}
+
+	}
+}
+
+/**
+ * Set page background rendered in banner. It will be passe to template.
+ */
+function _jmcouillard_attach_template_get_template_list() {
+
+	$templates = array();
+
+	// Get forms listing
+	$modulePath = drupal_get_path("module", "jmcouillard_attach_template");
+	$forms = file_scan_directory($modulePath . "/templates", '/.*\.inc$/');
+	foreach ($forms as $key => $file) {
+		$id = $file->name;
+		$templates[$id] = str_replace("_", " ", $id);
+	}
+
+	return $templates;
+}

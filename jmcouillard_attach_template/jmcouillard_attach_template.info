@@ -1,0 +1,7 @@
+name = Attach template
+description = Attach a custom template to a node
+package = jmcouillard
+core = 7.x
+version = "7.x-0.1"
+
+configure = admin/config/administration/attach_template
