@@ -346,6 +346,9 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		'#value' => t('Add new'),
 		'#submit' => array('_jmcouillard_manager_form_add'),
 	);
+	
+	// Apply alter
+	drupal_alter('jmcouillard_manager_actions_links', $form['actions'], $type);
 
 	// Update title
 	drupal_set_title("Manage " . str_replace("_", " ", $name)); 

@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * Form function, called by drupal_get_form()
  * in the admin page.
@@ -8,7 +7,7 @@
 function jmcouillard_manager_config_form($form, &$form_state) {
 
 	// Get formatted content types
-	$types =  _node_types_build()->types;
+	$types =   _node_types_build()->types;
 	$processedTypes = array();
 	foreach ($types as $type)
 		$processedTypes[$type->type] = $type->name;
@@ -17,7 +16,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 	$allFields = field_read_fields();
 	$processedAllFields = array();
 	foreach ($allFields as $key => $field)
-		$processedAllFields[$key] = $field['field_name'];	
+		$processedAllFields[$key] = $field['field_name'];
 
 	// Get integer fields
 	$intFields = field_read_fields(array('type' => "number_integer"));
@@ -76,14 +75,16 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 	}
 
 	// Add weight field selection
-	$form['jmcouillard_manager_weight_field'] = array(
-		'#type' => 'radios',
-		'#title' => t('Weight field'),
-		'#default_value' => variable_get('jmcouillard_manager_weight_field'),
-		'#options' => $processedIntFields,
-		'#description' => t('Field used to order nodes (weight). Must be a integer field.'),
-		'#required' => TRUE,
-	);
+	if(count($processedIntFields) > 0) {
+		$form['jmcouillard_manager_weight_field'] = array(
+			'#type' => 'radios',
+			'#title' => t('Weight field'),
+			'#default_value' => variable_get('jmcouillard_manager_weight_field'),
+			'#options' => $processedIntFields,
+			'#description' => t('Field used to order nodes (weight). Must be a integer field.'),
+			'#required' => TRUE,
+		);
+	}
 
 	// Add thumbnail style selection
 	$form['jmcouillard_manager_default'] = array(
@@ -93,7 +94,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 		'#description' => t('Default path to go when not specified (admin/content/manager/ will be prepended'),
 		'#required' => FALSE,
 	);
-	
+
 	// Add image fieldset
 	$form['jmcouillard_manager_image'] = array(
 		'#type' => 'fieldset',
@@ -110,7 +111,7 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 		'#description' => t('Field used to display thumbnail. Must be an image field.'),
 		'#required' => TRUE,
 	);
-	
+
 	// Add image field selection
 	$form['jmcouillard_manager_image']['jmcouillard_manager_image_field_fallback'] = array(
 		'#type' => 'radios',
@@ -191,7 +192,6 @@ function jmcouillard_manager_config_form($form, &$form_state) {
 			);
 		}
 	}
-
 
 	// Add extra_columns fieldset
 	$form['jmcouillard_manager_extra_columns'] = array(

@@ -30,9 +30,9 @@ function jmcouillard_manager_init() {
 
 				// Check if content type has the specified weight field
 				$typeFields = field_info_instances($type, $name);
-				$hasWeightField = isset($typeFields[$jmcouillard_manager_weight_field]) || $type == "taxonomy_term";
+				$hasWeightField = !empty($jmcouillard_manager_weight_field) && isset($typeFields[$jmcouillard_manager_weight_field]) || $type == "taxonomy_term";
 				$hasFirstImageField = isset($typeFields[$jmcouillard_manager_image_field]);
-				$hasSubcategoryField = isset($typeFields[$jmcouillard_manager_subcategory_field]);
+				$hasSubcategoryField = !is_array($jmcouillard_manager_subcategory_field) && isset($typeFields[$jmcouillard_manager_subcategory_field]);
 
 				// Save type to global variable
 				$managed[$name] = array(
