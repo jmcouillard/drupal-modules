@@ -15,19 +15,21 @@ function jmcouillard_manager_form_submit($form, &$form_state) {
 		foreach ($form_state['values']['items'] as $id => $item) {
 
 			// Edit nodes
-			if($item['type'] == "node") {
+			if ($item['type'] == "node") {
 
 				$node = node_load($id);
-				if(isset($item['title'])) $node->title = $item['title'];
+				if (isset($item['title']))
+					$node->title = $item['title'];
 				$node->{$weightField}['und'][0]['value'] = $item['weight'];
 
 				node_save($node);
 
-			// Edit terms
-			} else if($item['type'] == "taxonomy_term") {
+				// Edit terms
+			} else if ($item['type'] == "taxonomy_term") {
 
 				$term = taxonomy_term_load($id);
-				if(isset($item['title'])) $term->name = $item['title'];
+				if (isset($item['title']))
+					$term->name = $item['title'];
 				$term->weight = $item['weight'];
 
 				taxonomy_term_save($term);
@@ -36,7 +38,6 @@ function jmcouillard_manager_form_submit($form, &$form_state) {
 	}
 
 	if (isset($form_state['values']['variable'])) {
-
 		$varname = $types[$form_state['values']['type']]["variable"]["name"];
 		variable_set($varname, $form_state['values']['variable']['value']);
 	}
@@ -66,14 +67,14 @@ function theme_jmcouillard_manager_table($vars) {
 		t('Title'),
 	);
 
-	// Extra colums header 
+	// Extra colums header
 	if ($managed[$name]["extraColumns"]) {
-		foreach ($managed[$name]["extraColumns"] as $extra) { 			
+		foreach ($managed[$name]["extraColumns"] as $extra) {
 			$header[] = $form["#extra_data"]["extraColumns"][$extra]["label"];
 		}
 	}
 
-	// Edit header colums header 
+	// Edit header colums header
 	$header[] = t('Edit');
 
 	// Deletable table header
@@ -101,11 +102,10 @@ function theme_jmcouillard_manager_table($vars) {
 				// array('data' => $element['title']["#extra_data"]['edit_link']),
 			), );
 
-
 		// Extra colums
 		if ($managed[$name]["extraColumns"]) {
 			foreach ($managed[$name]["extraColumns"] as $extra) {
-				$rows[$key]["data"][] = array('data' =>  $element[$extra]["#markup"]);
+				$rows[$key]["data"][] = array('data' => $element[$extra]["#markup"]);
 			}
 		}
 
@@ -123,7 +123,6 @@ function theme_jmcouillard_manager_table($vars) {
 			$rows[$key]['class'] = array('draggable');
 		}
 
-
 	}
 
 	// Render table
@@ -139,8 +138,9 @@ function theme_jmcouillard_manager_table($vars) {
 	$output .= drupal_render_children($form);
 
 	// Add drag js
-	if ($managed[$name]["sortable"])
+	if ($managed[$name]["sortable"]) {
 		drupal_add_tabledrag('jmcouillard_manager_form_table', 'order', 'sibling', 'retouche-manager-weight');
+	}
 
 	// Render and return
 	return $output;
@@ -151,10 +151,10 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	global $managed;
 
 	// Set default name if not defined
-	if(!isset($name)) {
+	if (!isset($name)) {
 		$keys = array_keys($managed);
 		$name = array_shift($keys);
-		$default = variable_get('jmcouillard_manager_default', $name );
+		$default = variable_get('jmcouillard_manager_default', $name);
 
 		drupal_goto('admin/content/manager/' . $default);
 	}
@@ -170,7 +170,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	$modulePath = drupal_get_path('module', 'jmcouillard_manager');
 
 	// Add custom css
-	drupal_add_css($modulePath  . "/jmcouillard_manager_form_table.css");
+	drupal_add_css($modulePath . "/jmcouillard_manager_form_table.css");
 
 	// Create form
 	$form = array(
@@ -178,10 +178,10 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		'items' => array('#tree' => TRUE),
 	);
 
-	if($type == "node") {
+	if ($type == "node") {
 
-		if($managed[$name]["sortable"]) {
-			$results = db_query("SELECT * FROM {node} AS n LEFT JOIN {field_data_".$weightField."} AS w ON n.nid = w.entity_id WHERE n.type=:type ORDER BY " . $managed[$name]["order"], array(':type' => $name));
+		if ($managed[$name]["sortable"]) {
+			$results = db_query("SELECT * FROM {node} AS n LEFT JOIN {field_data_" . $weightField . "} AS w ON n.nid = w.entity_id WHERE n.type=:type ORDER BY " . $managed[$name]["order"], array(':type' => $name));
 		} else {
 			$results = db_query("SELECT * FROM {node} AS n WHERE n.type=:type ORDER BY n.created DESC", array(':type' => $name));
 		}
@@ -193,26 +193,28 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 
 	$count = $results->rowCount();
 
-	while ($row = $results -> fetch()) {
+	while ($row = $results->fetch()) {
 
 		if (!isset($row))
 			break;
 
 		// Load entity
-		$entity = ($type == "node") ? node_load($row -> nid) : taxonomy_term_load($row -> tid);
-		$entityId = ($type == "node") ? $entity -> nid : $entity -> tid;
-		$entityTitle = ($type == "node") ? $entity -> title : $entity -> name;
+		$entity = ($type == "node") ? node_load($row->nid) : taxonomy_term_load($row->tid);
+		$entityId = ($type == "node") ? $entity->nid : $entity->tid;
+		$entityTitle = ($type == "node") ? $entity->title : $entity->name;
 
 		// Filter subcategory
-		if(isset($subcategory)) {
-			if (isset($entity -> {$definedSubcagtegoryField})) {
+		if (isset($subcategory)) {
+			if (isset($entity->$definedSubcagtegoryField)) {
 
 				$found = FALSE;
-				foreach($entity->{$definedSubcagtegoryField}["und"] as $key => $item) {
-					if($item["tid"] == $subcategory) $found = TRUE;
+				foreach ($entity->{$definedSubcagtegoryField}["und"] as $key => $item) {
+					if ($item["tid"] == $subcategory)
+						$found = TRUE;
 				}
 
-				if(!$found) continue;
+				if (!$found)
+					continue;
 
 			} else {
 				continue;
@@ -221,34 +223,34 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 
 		// Create data
 		$data = array(
-			"nid"=>$entityId,
-			"title"=>$entityTitle,
-			"weight"=>0
+			"nid" => $entityId,
+			"title" => $entityTitle,
+			"weight" => 0
 		);
 
 		// Define weight
-		if($type == "node") {
-			$data['weight'] = isset($entity -> {$weightField}['und'])  ? $entity -> {$weightField}['und'][0]['value'] : 0;
-		} else if($type == "taxonomy_term") {
-			$data['weight'] = $entity -> weight ;
+		if ($type == "node") {
+			$data['weight'] = isset($entity->{$weightField}['und']) ? $entity->{$weightField}['und'][0]['value'] : 0;
+		} else if ($type == "taxonomy_term") {
+			$data['weight'] = $entity->weight;
 		}
 
 		// Link prefix
 		$baseLinkPath = ($type == "node") ? "node/" : "taxonomy/term/";
-		
+
 		// Edit link
-		if(!$useForm) {
+		if (!$useForm) {
 			$data['edit_link'] = l(t('edit'), $baseLinkPath . $entityId . '/edit', array('query' => array('destination' => current_path())));
 		} else {
-			$data['edit_link'] = l(t('edit'), "admin/content/manager/edit/" . $name. "/" . $entityId . '/edit', array('query' => array('destination' => current_path())));			
+			$data['edit_link'] = l(t('edit'), "admin/content/manager/edit/" . $name . "/" . $entityId . '/edit', array('query' => array('destination' => current_path())));
 		}
-		
+
 		// Delete link
-		$data['delete_link'] = l(t('delete'),  $baseLinkPath . $entityId . '/delete', array('query' => array('destination' => current_path())));
+		$data['delete_link'] = l(t('delete'), $baseLinkPath . $entityId . '/delete', array('query' => array('destination' => current_path())));
 
 		// Define image url (for thumbnail)
-		if (isset($entity -> {$imageField}["und"])) {
-			$data['img_url'] = image_style_url($thumbImageStyle, $entity -> {$imageField}["und"][0]["uri"]);
+		if (isset($entity->{$imageField}["und"])) {
+			$data['img_url'] = image_style_url($thumbImageStyle, $entity->{$imageField}["und"][0]["uri"]);
 		} else {
 			$data['img_url'] = $modulePath . "/images/jmcouillard_manager_default.png";
 		}
@@ -263,7 +265,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 			)
 		)), ("node/" . $entityId), array("html" => TRUE));
 
-		$field_weight = array( 
+		$field_weight = array(
 			'#type' => 'weight',
 			'#default_value' => $data['weight'],
 			'#delta' => $count,
@@ -293,7 +295,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 			foreach ($managed[$name]["extraColumns"] as $extra) {
 				$form['items'][$data['nid']][$extra] = array(
 					'#type' => 'markup',
-					'#markup' => field_view_field($type, $entity, $extra, array("label"=>"hidden")),
+					'#markup' => field_view_field($type, $entity, $extra, array("label" => "hidden")),
 					// '#extra_data' => field_view_field($type, $entity, $extra, array("label"=>"hidden")),
 				);
 			}
@@ -346,12 +348,12 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 		'#value' => t('Add new'),
 		'#submit' => array('_jmcouillard_manager_form_add'),
 	);
-	
+
 	// Apply alter
 	drupal_alter('jmcouillard_manager_actions_links', $form['actions'], $type);
 
 	// Update title
-	drupal_set_title("Manage " . str_replace("_", " ", $name)); 
+	drupal_set_title("Manage " . str_replace("_", " ", $name));
 
 	return $form;
 }
@@ -364,15 +366,17 @@ function _jmcouillard_manager_form_add($form, &$form_state) {
 		$type = $form_state["build_info"]["args"][0];
 		$name = $form_state["build_info"]["args"][1];
 		$useForm = ($managed[$name]["form"] != "");
-		
-		if($useForm) {
+		$options = array('query' => array('destination' => current_path()));
+
+		if ($useForm) {
 			drupal_goto("admin/content/manager/add/" . $name);
-		}else {
-			if($type=="node") drupal_goto("node/add/" . str_replace("_", "-", $name));
-			else if($type=="taxonomy_term") drupal_goto("admin/structure/taxonomy/" . $name . "/add");
+		} else {
+			if ($type == "node") {
+				drupal_goto("node/add/" . str_replace("_", "-", $name), $options);
+			} else if ($type == "taxonomy_term") {
+				drupal_goto("admin/structure/taxonomy/" . $name . "/add", $options);
+			}
 		}
 	};
 }
-
-
 ?>
