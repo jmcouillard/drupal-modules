@@ -1,0 +1,26 @@
+<?php
+
+function jmcouillard_token_url_abs_token_info() {
+	$info['tokens']['site']['url-abs'] = array(
+		'name' => t('Absolute URL'),
+		'description' => t('Url of the site, no language prefix garanted'),
+	);
+	return $info;
+}
+
+/*Token replacement*/
+function jmcouillard_token_url_abs_tokens($type, $tokens, array $data = array(), array $options = array()) {
+	$replacements = array();
+	global $base_root;
+	if($type == 'site') {
+		foreach ($tokens as $name => $original) {
+			switch ($name) {
+				case 'url-abs' :
+					$replacements[$original] = $base_root;
+					break;
+			}
+		}
+	}
+	return $replacements;
+}
+?>
