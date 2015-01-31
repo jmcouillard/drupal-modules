@@ -5,32 +5,29 @@
  */
 function jmcouillard_private_nodes_menu() {
 
-  $items = array();
-  
-  $items['private'] = array(
-    'title' => 'Private galleries',
-    'description' => 'Here you can enter the password to access the private gallery',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array(
-      'jmcouillard_private_nodes_enterpassword'
-    ),
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
-    'file' => 'jmcouillard_private_nodes.inc'
-  );
-  
-  $items['admin/config/content/jmcouillard_private_nodes'] = array(
-    'title' => 'Private nodes',
-    'description' => 'Configuration for Private nodes module',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('jmcouillard_private_nodes_config_form'),
-    'access arguments' => array('access administration pages'),
-    'type' => MENU_NORMAL_ITEM,
-  );
-    
-  return $items;
-}
+	$items = array();
 
+	$items['private'] = array(
+		'title' => 'Private galleries',
+		'description' => 'Here you can enter the password to access the private gallery',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('jmcouillard_private_nodes_enterpassword'),
+		'access callback' => TRUE,
+		'type' => MENU_CALLBACK,
+		'file' => 'jmcouillard_private_nodes.inc'
+	);
+
+	$items['admin/config/content/jmcouillard_private_nodes'] = array(
+		'title' => 'Private nodes',
+		'description' => 'Configuration for Private nodes module',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('jmcouillard_private_nodes_config_form'),
+		'access arguments' => array('access administration pages'),
+		'type' => MENU_NORMAL_ITEM,
+	);
+
+	return $items;
+}
 
 /**
  * Implementation of hook_nodeapi().
@@ -38,78 +35,81 @@ function jmcouillard_private_nodes_menu() {
  */
 function jmcouillard_private_nodes_node_view($node, $view_mode, $langcode) {
 
+	//If no access, restrict
+	if(!_jmcouillard_private_nodes_access($node)) {
+
+		//$destination = drupal_get_destination();
+		drupal_goto('private');
+	}
+}
+
+function _jmcouillard_private_nodes_access($node) {
+
 	global $user;
 	$fieldname = variable_get('jmcouillard_private_nodes_field');
 	$type = variable_get('jmcouillard_private_nodes_type');
-	
-	if ($node->type == $type) {
-	
+
+	if($node->type == $type) {
+
 		if(!isset($node->$fieldname)) {
-		
-			//Field is not existing 
+
+			//Field is not existing
 			$visitorAllowed = false;
-			
+
 		} else {
-		
-	        //Get password
+
+			//Get password
 			$field = $node->$fieldname;
-	        $pass = $field['und'][0]['value'];
-	        
-	      	//Check current visitor passwords
-	      	if(isset($_SESSION['jmcouillard_private_nodes_passwords'])) {
-	      		$visitorAllowed = in_array($pass, $_SESSION['jmcouillard_private_nodes_passwords']);
-	      	} else {
-	      		$visitorAllowed = false;
-	      	}		
+			$pass = $field[LANGUAGE_NONE][0]['value'];
+
+			//Check current visitor passwords
+			if(isset($_SESSION['jmcouillard_private_nodes_passwords'])) {
+				return in_array($pass, $_SESSION['jmcouillard_private_nodes_passwords']);
+			} else {
+				return false;
+			}
 		}
-	
-      	
-      	//If no access, restrict
-      	if(!$visitorAllowed) {	  
-               		      		
-            //$destination = drupal_get_destination();
-            drupal_goto('private');
-      	}
-      	
+
 	}
 }
 
 /**
-* Form function, called by drupal_get_form()
-* in the admin page.
-*/
+ * Form function, called by drupal_get_form()
+ * in the admin page.
+ */
 function jmcouillard_private_nodes_config_form($form, &$form_state) {
 
-  // Get formatted content types
-  $types = _node_types_build()->types;
-  $formattedTypes = array();  
-  foreach($types as $type) $formattedTypes[$type->type] = $type->name;
-  
-  // Get formatted fields
-  $textFields = field_read_fields(array('type'=>"text"));
-  $formattedFields = array();
-  foreach($textFields as $key=>$field) $formattedFields[$key] = $field['field_name'];
-  
-  // Add type radio button
-  $form['jmcouillard_private_nodes_type'] = array(
-    '#type' => 'radios',
-    '#title' => t('Protected content type'),
-    '#default_value' => variable_get('jmcouillard_private_nodes_type'),
-    '#options' => $formattedTypes,
-    '#description' => t('Only the selected content type will be protected.'),
-    '#required' => TRUE,
-  );
+	// Get formatted content types
+	$types =    _node_types_build()->types;
+	$formattedTypes = array();
+	foreach ($types as $type)
+		$formattedTypes[$type->type] = $type->name;
 
-  // Add field radio button
-  $form['jmcouillard_private_nodes_field'] = array(
-    '#type' => 'radios',
-    '#title' => t('Password field'),
-    '#default_value' => variable_get('jmcouillard_private_nodes_field'),
-    '#options' => $formattedFields,
-    '#description' => t('Field used as password.'),
-    '#required' => TRUE,
-  );
+	// Get formatted fields
+	$textFields = field_read_fields(array('type' => "text"));
+	$formattedFields = array();
+	foreach ($textFields as $key => $field)
+		$formattedFields[$key] = $field['field_name'];
 
-  return system_settings_form($form);
+	// Add type radio button
+	$form['jmcouillard_private_nodes_type'] = array(
+		'#type' => 'radios',
+		'#title' => t('Protected content type'),
+		'#default_value' => variable_get('jmcouillard_private_nodes_type'),
+		'#options' => $formattedTypes,
+		'#description' => t('Only the selected content type will be protected.'),
+		'#required' => TRUE,
+	);
+
+	// Add field radio button
+	$form['jmcouillard_private_nodes_field'] = array(
+		'#type' => 'radios',
+		'#title' => t('Password field'),
+		'#default_value' => variable_get('jmcouillard_private_nodes_field'),
+		'#options' => $formattedFields,
+		'#description' => t('Field used as password.'),
+		'#required' => TRUE,
+	);
+
+	return system_settings_form($form);
 }
-
