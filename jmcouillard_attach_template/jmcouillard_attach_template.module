@@ -2,15 +2,16 @@
 
 require_once 'jmcouillard_attach_template.node.inc';
 
+
 /**
  * Implementation of hook_menu().
  */
 function jmcouillard_attach_template_menu() {
 
 	// Configuration page
-	$items['admin/config/administration/attach_template'] = array(
+	$items['admin/config/content/attach_template'] = array(
 		'title' => 'Attach template configuration',
-		'description' => 'Configuration',
+		'description' => 'Configuration for Attach template module',
 		'page callback' => 'drupal_get_form',
 		'page arguments' => array('jmcouillard_attach_template_config_form'),
 		'access arguments' => array('access administration pages'),
@@ -20,6 +21,7 @@ function jmcouillard_attach_template_menu() {
 
 	return $items;
 }
+
 /**
  * Implementation of hook_theme.
  */
