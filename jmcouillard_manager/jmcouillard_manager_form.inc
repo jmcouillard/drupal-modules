@@ -345,7 +345,7 @@ function jmcouillard_manager_form($form, &$form_state, $type = NULL, $name = NUL
 	$form['actions']['add'] = array(
 		'#name' => 'add',
 		'#type' => 'submit',
-		'#value' => t('Add new'),
+		'#value' => t('Add content'),
 		'#submit' => array('_jmcouillard_manager_form_add'),
 	);
 
