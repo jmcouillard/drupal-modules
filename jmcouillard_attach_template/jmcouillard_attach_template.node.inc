@@ -149,7 +149,10 @@ function jmcouillard_attach_template_form_node_form_alter(&$form, &$form_state) 
 	$lang = $language->language;
 	$type = $form['#node']->type;
 
-	// if($type == 'page') {
+	// Do not show if not specified in config page
+	if(!in_array($type, variable_get('jmcouillard_attach_template_type', array()))) {
+		return;
+	};
 
 	// Define position in form
 	$weight = isset($form['field_footer_extra_content']) ? $form['field_footer_extra_content']["#weight"] - 1 : 50;
